@@ -1,0 +1,23 @@
+# NVIDIA driver source (proprietary, not for redistribution)
+NVIDIA-Linux-x86_64-418.113/
+NVIDIA-Linux-x86_64-*.run
+
+# Build artifacts
+*.o
+*.ko
+*.mod.c
+*.symvers
+*.order
+Module.markers
+modules.builtin
+.conftest/
+conftest/
+
+# Temporary extraction directories
+/tmp/selfgz*/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo

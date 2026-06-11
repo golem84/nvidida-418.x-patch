@@ -1,0 +1,19 @@
+This repository contains PATCHES and BUILD SCRIPTS for the NVIDIA 418.113 driver.
+It does NOT contain the NVIDIA driver source code or binaries.
+
+The NVIDIA driver is proprietary software licensed under the NVIDIA End User License Agreement (EULA).
+You must download the official driver from NVIDIA's website:
+https://www.nvidia.com/Download/index.aspx
+
+This repository only provides:
+- Patch files (.patch) to fix kernel 7.x compatibility
+- Build scripts to apply patches and compile the driver
+- Documentation on the patching process
+
+To use this repository:
+1. Download NVIDIA-Linux-x86_64-418.113.run from NVIDIA's official site
+2. Place it in /opt/nvidia/ (or update the build script path)
+3. Run the build script to extract, patch, and compile
+
+The patches are derivative works created for interoperability purposes.
+They are provided under MIT License for the patch files themselves.
