@@ -60,22 +60,26 @@ README.md
 
 ### How to Build
 
+**Автоматически (рекомендуется):**
+```bash
+sudo bash scripts/build_patched_driver.sh /opt/nvidia/NVIDIA-Linux-x86_64-418.113.run
+```
+
+**Вручную:**
 ```bash
 # Извлечь драйвер
 sh /path/to/NVIDIA-Linux-x86_64-418.113.run --extract-only
 
 # Применить патч
-./scripts/apply_patches.sh /path/to/NVIDIA-Linux-x86_64-418.113
+bash scripts/apply_patches.sh /path/to/NVIDIA-Linux-x86_64-418.113
 
-# Скопировать бинарный блоб
-cp /path/to/original/kernel/nvidia/nv-kernel.o_binary \
-   /path/to/NVIDIA-Linux-x86_64-418.113/kernel/nvidia/nv-kernel.o
-
-# Собрать
+# Собрать и установить (через install.sh внутри .run или вручную)
 cd /path/to/NVIDIA-Linux-x86_64-418.113/kernel
 make -C /usr/src/linux-headers-7.0.0-22-generic M=$(pwd) modules \
   NV_KERNEL_MODULES="nvidia nvidia-uvm nvidia-modeset nvidia-drm"
 ```
+
+Подробнее: см. `README.md` в корне репозитория.
 
 ### Известные проблемы
 
