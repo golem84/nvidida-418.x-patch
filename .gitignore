@@ -1,6 +1,7 @@
 # NVIDIA driver source (proprietary, not for redistribution)
 NVIDIA-Linux-x86_64-418.113/
 NVIDIA-Linux-x86_64-*.run
+kernel/
 
 # Build artifacts
 *.o
