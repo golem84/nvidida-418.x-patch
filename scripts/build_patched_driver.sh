@@ -42,6 +42,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
+OUTPUT_DIR="$(pwd)"
+
 echo "========================================"
 echo " NVIDIA 418.113 Patched Driver Builder"
 echo "========================================"
@@ -150,15 +152,19 @@ makeself "$PATCHED_DIR" "$OUTPUT_RUN" \
 
 echo "  OK — $OUTPUT_RUN"
 
+# Copy output to current directory before cleanup
+cp "$OUTPUT_RUN" "$OUTPUT_DIR/"
+FINAL_RUN="$OUTPUT_DIR/NVIDIA-Linux-x86_64-418.113-patched.run"
+
 echo ""
 echo "========================================"
 echo " BUILD COMPLETE"
 echo "========================================"
 echo ""
-echo "Output: $OUTPUT_RUN"
+echo "Output: $FINAL_RUN"
 echo ""
 echo "To install:"
-echo "  sudo sh $OUTPUT_RUN"
+echo "  sudo sh $FINAL_RUN"
 echo ""
 echo "After installation, reboot and verify:"
 echo "  nvidia-smi"
