@@ -144,6 +144,7 @@ echo "  2. After reboot, verify: nvidia-smi"
 echo "  3. If issues: check $LOG and /var/log/Xorg.0.log"
 INSTALLEOF
 chmod +x "$INSTALL_SCRIPT"
+cp "$INSTALL_SCRIPT" "$PATCHED_DIR/install.sh"
 
 makeself "$PATCHED_DIR" "$OUTPUT_RUN" \
     "NVIDIA 418.113 Patched for Kernel 7.0" \
