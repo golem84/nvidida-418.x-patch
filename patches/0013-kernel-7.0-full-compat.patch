@@ -1,0 +1,3095 @@
+diff -ruN --no-dereference a/common/inc/conftest.h b/common/inc/conftest.h
+--- a/common/inc/conftest.h	2026-06-15 01:29:50.526882350 +0800
++++ b/common/inc/conftest.h	2026-06-15 01:29:50.527963082 +0800
+@@ -1,11 +1,65 @@
+ #ifndef _CONFTEST_H
+ #define _CONFTEST_H
+ 
+-#include "conftest/headers.h"
+-#include "conftest/functions.h"
+-#include "conftest/generic.h"
+-#include "conftest/macros.h"
+-#include "conftest/symbols.h"
+-#include "conftest/types.h"
++/* Kernel 7.0 compatibility defines */
++#define NV_VM_FAULT_PRESENT
++#define NV_VM_FAULT_HAS_ADDRESS
++#define NV_VM_FAULT_HAS_REAL_ADDRESS
++#define NV_VMF_INSERT_PFN_PRESENT
++#define NV_TIMER_SETUP_PRESENT
++#define NV_GET_USER_PAGES_REMOTE_PRESENT
++#define NV_GET_USER_PAGES_4_ARGS
++#define NV_KUID_T_PRESENT
++#define NV_LIST_CUT_POSITION_PRESENT
++#define NV_LIST_IS_FIRST_PRESENT
++#define NV_FILE_OPERATIONS_HAS_UNLOCKED_IOCTL
++#define NV_FILE_OPERATIONS_HAS_COMPAT_IOCTL
++#define NV_LINUX_SEMAPHORE_H_PRESENT
++#define NV_ACPI_WALK_NAMESPACE_PRESENT
++#define NV_ACPI_WALK_NAMESPACE_ARGUMENT_COUNT 7
++#define NV_SMP_CALL_FUNCTION_PRESENT
++#define NV_SMP_CALL_FUNCTION_ARGUMENT_COUNT 4
++#define NV_FATAL_SIGNAL_PENDING_PRESENT
++#define NV_KBASENAME_PRESENT
++#define NV_BITMAP_CLEAR_PRESENT
++#define NV_REMAP_PFN_RANGE_PRESENT
++#define NV_ADDRESS_SPACE_INIT_ONCE_PRESENT
++#define NV_REMAP_PAGE_RANGE_PRESENT
++#define NV_WAIT_ON_BIT_LOCK_ARGUMENT_COUNT 3
++#define NV_USLEEP_RANGE_PRESENT
++#define NV_RADIX_TREE_EMPTY_PRESENT
++#define NV_SET_MEMORY_UC_PRESENT
++#define NV_SET_MEMORY_ARRAY_UC_PRESENT
++#define NV_VMAP_PRESENT
++#define NV_GET_NUM_PHYSPAGES_PRESENT
++#define NV_ON_EACH_CPU_PRESENT
++#define NV_ON_EACH_CPU_ARGUMENT_COUNT 3
++#define NV_PM_MESSAGE_T_PRESENT
++#define NV_CONSOLE_LOCK_PRESENT
++#define NV_IOREMAP_NOCACHE_PRESENT
++#define NV_VZALLOC_PRESENT
++#define NV_KMEM_CACHE_CREATE_PRESENT
++#define NV_KMEM_CACHE_CREATE_ARGUMENT_COUNT 5
++#define NV_SWIOTLB_PRESENT
++#define NV_INIT_WORK_PRESENT
++#define NV_INIT_WORK_ARGUMENT_COUNT 2
++#define NV_PCI_ENABLE_MSIX_RANGE_PRESENT
++#define NV_IRQ_HANDLER_T_PRESENT
++#define NV_IRQ_HANDLER_T_ARGUMENT_COUNT 2
++#define NV_SPECTRE_V2 0
++#define NV_ACPI_DEVICE_ID_HAS_DRIVER_DATA
++#define NV_PROC_CREATE_DATA_PRESENT
++#define NV_PROC_REMOVE_PRESENT
++#define NV_PROC_MKDIR_MODE_PRESENT
++#define NV_TASK_STRUCT_HAS_CRED
++#define NV_PCI_GET_DOMAIN_BUS_AND_SLOT_PRESENT
++#define NV_FILE_HAS_INODE
++#define NV_VM_OPS_FAULT_REMOVED_VMA_ARG
++#define NV_IS_EXPORT_SYMBOL_GPL_refcount_inc 0
++#define NV_IS_EXPORT_SYMBOL_GPL_refcount_dec_and_test 0
++#if defined(CONFIG_X86_64) || defined(CONFIG_X86)
++#define smp_read_barrier_depends() do { } while (0)
++#endif
++typedef unsigned long long nv_acpi_integer_t;
+ 
+ #endif
+diff -ruN --no-dereference a/common/inc/nv.h b/common/inc/nv.h
+--- a/common/inc/nv.h	2026-06-15 01:29:50.804216542 +0800
++++ b/common/inc/nv.h	2026-06-15 01:29:50.805409641 +0800
+@@ -602,31 +602,31 @@
+ 
+ #define NV_TIMERCMP(a, b, CMP)                                              \
+     (((a)->tv_sec == (b)->tv_sec) ?                                         \
+-        ((a)->tv_usec CMP (b)->tv_usec) : ((a)->tv_sec CMP (b)->tv_sec))
++        ((a)->tv_nsec CMP (b)->tv_nsec) : ((a)->tv_sec CMP (b)->tv_sec))
+ 
+ #define NV_TIMERADD(a, b, result)                                           \
+     {                                                                       \
+         (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;                       \
+-        (result)->tv_usec = (a)->tv_usec + (b)->tv_usec;                    \
+-        if ((result)->tv_usec >= 1000000)                                   \
++        (result)->tv_nsec = (a)->tv_nsec + (b)->tv_nsec;                    \
++        if ((result)->tv_nsec >= NSEC_PER_SEC)                              \
+         {                                                                   \
+             ++(result)->tv_sec;                                             \
+-            (result)->tv_usec -= 1000000;                                   \
++            (result)->tv_nsec -= NSEC_PER_SEC;                              \
+         }                                                                   \
+     }
+ 
+ #define NV_TIMERSUB(a, b, result)                                           \
+     {                                                                       \
+         (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;                       \
+-        (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;                    \
+-        if ((result)->tv_usec < 0)                                          \
++        (result)->tv_nsec = (a)->tv_nsec - (b)->tv_nsec;                    \
++        if ((result)->tv_nsec < 0)                                          \
+         {                                                                   \
+           --(result)->tv_sec;                                               \
+-          (result)->tv_usec += 1000000;                                     \
++          (result)->tv_nsec += NSEC_PER_SEC;                                \
+         }                                                                   \
+     }
+ 
+-#define NV_TIMEVAL_TO_US(tv)    ((NvU64)(tv).tv_sec * 1000000 + (tv).tv_usec)
++#define NV_TIMEVAL_TO_US(tv)    ((NvU64)(tv).tv_sec * 1000000 + (tv).tv_nsec / 1000)
+ 
+ #ifndef NV_ALIGN_UP
+ #define NV_ALIGN_UP(v,g) (((v) + ((g) - 1)) & ~((g) - 1))
+diff -ruN --no-dereference a/common/inc/nv-linux.h b/common/inc/nv-linux.h
+--- a/common/inc/nv-linux.h	2026-06-15 01:29:50.813235544 +0800
++++ b/common/inc/nv-linux.h	2026-06-15 01:29:50.814344657 +0800
+@@ -28,7 +28,7 @@
+ #if defined(NV_GENERATED_AUTOCONF_H_PRESENT)
+ #include <generated/autoconf.h>
+ #else
+-#include <linux/autoconf.h>
++#include <generated/autoconf.h>
+ #endif
+ #endif
+ 
+@@ -115,7 +115,8 @@
+ 
+ #include <linux/moduleparam.h>      /* module_param()                   */
+ #include <asm/tlbflush.h>           /* flush_tlb(), flush_tlb_all()     */
+-#include <asm/kmap_types.h>         /* page table entry lookup          */
++/* kmap_types.h removed in kernel 5.9+, use kmap_local_page() instead */
++/* Removed asm/kmap_types.h include - not available in kernel 7.0+ */
+ 
+ #include <linux/pci.h>              /* pci_find_class, etc              */
+ #include <linux/interrupt.h>        /* tasklets, interrupt helpers      */
+@@ -150,20 +151,6 @@
+ #define NV_CURRENT_EUID() (__kuid_val(current->euid))
+ #endif
+ 
+-#if !defined(NV_KUID_T_PRESENT)
+-typedef uid_t kuid_t;
+-
+-static inline uid_t __kuid_val(kuid_t uid)
+-{
+-    return uid;
+-}
+-#endif
+-
+-#if defined(NVCPU_X86_64) && !defined(HAVE_COMPAT_IOCTL)
+-#include <linux/syscalls.h>         /* sys_ioctl()                      */
+-#include <linux/ioctl32.h>          /* register_ioctl32_conversion()    */
+-#endif
+-
+ #if !defined(NV_FILE_OPERATIONS_HAS_IOCTL) && \
+   !defined(NV_FILE_OPERATIONS_HAS_UNLOCKED_IOCTL)
+ #error "struct file_operations compile test likely failed!"
+@@ -553,7 +540,7 @@
+ 
+ static inline void *nv_vmalloc(unsigned long size)
+ {
+-    void *ptr = __vmalloc(size, GFP_KERNEL, PAGE_KERNEL);
++    void *ptr = __vmalloc(size, GFP_KERNEL);
+     if (ptr)
+         NV_MEMDBG_ADD(ptr, size);
+     return ptr;
+@@ -575,7 +562,7 @@
+ 
+ static inline void *nv_ioremap_nocache(NvU64 phys, NvU64 size)
+ {
+-    void *ptr = ioremap_nocache(phys, size);
++    void *ptr = ioremap(phys, size);
+     if (ptr)
+         NV_MEMDBG_ADD(ptr, size);
+     return ptr;
+@@ -829,7 +816,7 @@
+ #else
+ #define NV_PCI_DEV_PUT(dev)
+ #define NV_PCI_GET_DEVICE(vendor,device,from)  pci_find_device(vendor,device,from)
+-#define NV_PCI_GET_CLASS(class,from)           pci_find_class(class,from)
++#define NV_PCI_GET_CLASS(class,from)           pci_get_class(class,from)
+ #endif
+ 
+ #if defined(CONFIG_X86_UV) && defined(NV_CONFIG_X86_UV)
+@@ -1088,10 +1075,10 @@
+     }
+ #else
+     /*
+-     * remap_page_range() was replaced by remap_pfn_range() in 2.6.10, but we
+-     * still support 2.6.9.
++     * remap_page_range() was replaced by remap_pfn_range() in 2.6.10.
++     * For kernel 7.0+, use remap_pfn_range with proper pfn conversion.
+      */
+-    ret = remap_page_range(vma, virt_addr, phys_addr, size, prot);
++    ret = remap_pfn_range(vma, virt_addr, phys_addr >> PAGE_SHIFT, size, prot);
+ #endif /* defined(NV_REMAP_PFN_RANGE_PRESENT) */
+     return ret;
+ }
+@@ -1402,15 +1389,15 @@
+     #else
+     swiotlb_in_use = (ops->map_sg == swiotlb_map_sg);
+     #endif
+-  #elif defined(NVCPU_X86_64)
+-    /*
+-     * Fallback for old 2.6 kernels - if the DMA operations infrastructure
+-     * isn't in place, use the swiotlb flag. Before dma_ops was added, this
+-     * flag used to be exported. It still exists in modern kernels but is no
+-     * longer exported.
+-     */
+-    swiotlb_in_use = (swiotlb == 1);
+-  #endif
++   #elif defined(NVCPU_X86_64)
++     /*
++      * Fallback for old 2.6 kernels - if the DMA operations infrastructure
++      * isn't in place, use the swiotlb flag. Before dma_ops was added, this
++      * flag used to be exported. It still exists in modern kernels but is no
++      * longer exported. For kernel 7.0+, swiotlb is integrated into dma_direct.
++      */
++     swiotlb_in_use = NV_FALSE;
++   #endif
+ #endif
+ 
+     return swiotlb_in_use;
+@@ -1678,6 +1665,7 @@
+     struct acpi_device *device;
+ 
+     nv_video_t pNvVideo[NV_MAXNUM_DISPLAY_DEVICES];
++    int device_counter;
+ 
+     int notify_handler_installed;
+     int default_display_mask;
+@@ -1867,7 +1855,7 @@
+ #if defined(NV_FILE_HAS_INODE)
+ #define NV_FILE_INODE(file) (file)->f_inode
+ #else
+-#define NV_FILE_INODE(file) (file)->f_dentry->d_inode
++#define NV_FILE_INODE(file) (file)->f_inode
+ #endif
+ 
+ /* Stub out UVM in multi-RM builds */
+@@ -1904,10 +1892,7 @@
+ #if defined(NV_PCI_BUS_ADDRESS_PRESENT)
+     bus_addr = pci_bus_address(nvl->dev, bar_index);
+ #elif defined(CONFIG_PCI)
+-    struct pci_bus_region region;
+-
+-    pcibios_resource_to_bus(nvl->dev, &region, &nvl->dev->resource[bar_index]);
+-    bus_addr = region.start;
++    bus_addr = pci_resource_start(nvl->dev, bar_index);
+ #endif
+     return bus_addr;
+ }
+diff -ruN --no-dereference a/common/inc/nv-list-helpers.h b/common/inc/nv-list-helpers.h
+--- a/common/inc/nv-list-helpers.h	2026-06-15 01:29:50.506976944 +0800
++++ b/common/inc/nv-list-helpers.h	2026-06-15 01:29:50.508184228 +0800
+@@ -31,35 +31,7 @@
+         for (pos = (head)->next; pos != (head); pos = (pos)->next)
+ #endif
+ 
+-#if !defined(NV_LIST_CUT_POSITION_PRESENT)
+-    static inline void __list_cut_position(struct list_head *list,
+-                                           struct list_head *head,
+-                                           struct list_head *entry)
+-    {
+-         struct list_head *new_first = entry->next;
+-         list->next = head->next;
+-         list->next->prev = list;
+-         list->prev = entry;
+-         entry->next = list;
+-         head->next = new_first;
+-         new_first->prev = head;
+-    }
+-
+-    static inline void list_cut_position(struct list_head *list,
+-                                         struct list_head *head,
+-                                         struct list_head *entry)
+-    {
+-         if (list_empty(head))
+-             return;
+-         if ((!list_empty(head) && (head->next == head->prev)) &&
+-             (head->next != entry && head != entry))
+-             return;
+-         if (entry == head)
+-             INIT_LIST_HEAD(list);
+-         else
+-             __list_cut_position(list, head, entry);
+-    }
+-#endif
++
+ 
+ #if !defined(list_first_entry)
+     #define list_first_entry(ptr, type, member) \
+@@ -91,12 +63,6 @@
+         list_entry((pos)->member.next, typeof(*(pos)), member)
+ #endif
+ 
+-#if !defined(NV_LIST_IS_FIRST_PRESENT)
+-    static inline int list_is_first(const struct list_head *list,
+-                                    const struct list_head *head)
+-    {
+-        return list->prev == head;
+-    }
+-#endif
++
+ 
+ #endif // __NV_LIST_HELPERS_H__
+diff -ruN --no-dereference a/common/inc/nv-lock.h b/common/inc/nv-lock.h
+--- a/common/inc/nv-lock.h	2026-06-15 01:29:50.535316385 +0800
++++ b/common/inc/nv-lock.h	2026-06-15 01:29:50.536260627 +0800
+@@ -14,12 +14,7 @@
+ #include "conftest.h"
+ 
+ #include <linux/spinlock.h>
+-
+-#if defined(NV_LINUX_SEMAPHORE_H_PRESENT)
+ #include <linux/semaphore.h>
+-#else
+-#include <asm/semaphore.h>
+-#endif
+ 
+ #if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_PREEMPT_RT_FULL)
+ typedef raw_spinlock_t            nv_spinlock_t;
+diff -ruN --no-dereference a/common/inc/nv-mm.h b/common/inc/nv-mm.h
+--- a/common/inc/nv-mm.h	2026-06-15 01:29:50.658752326 +0800
++++ b/common/inc/nv-mm.h	2026-06-15 01:29:50.659853163 +0800
+@@ -25,7 +25,7 @@
+ 
+ #include "conftest.h"
+ 
+-#ifndef NV_VMF_INSERT_PFN_PRESENT
++#if !defined(NV_VM_FAULT_PRESENT)
+ typedef int vm_fault_t;
+ #endif
+ 
+@@ -47,56 +47,37 @@
+  *
+  */
+ 
+-#if defined(NV_GET_USER_PAGES_HAS_TASK_STRUCT)
+-    #if defined(NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS)
+-        #define NV_GET_USER_PAGES(start, nr_pages, write, force, pages, vmas) \
+-            get_user_pages(current, current->mm, start, nr_pages, write, force, pages, vmas)
+-    #else
+-        #include <linux/mm.h>
+-        #include <linux/sched.h>
+-
+-        static inline long NV_GET_USER_PAGES(unsigned long start,
+-                                             unsigned long nr_pages,
+-                                             int write,
+-                                             int force,
+-                                             struct page **pages,
+-                                             struct vm_area_struct **vmas)
+-        {
+-            unsigned int flags = 0;
+-
+-            if (write)
+-                flags |= FOLL_WRITE;
+-            if (force)
+-                flags |= FOLL_FORCE;
+-
+-            return get_user_pages(current, current->mm, start, nr_pages, flags,
+-                                  pages, vmas);
+-        }
+-    #endif
+-#else
+-    #if defined(NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS)
+-        #define NV_GET_USER_PAGES get_user_pages
+-    #else
+-        #include <linux/mm.h>
+-
+-        static inline long NV_GET_USER_PAGES(unsigned long start,
+-                                             unsigned long nr_pages,
+-                                             int write,
+-                                             int force,
+-                                             struct page **pages,
+-                                             struct vm_area_struct **vmas)
+-        {
+-            unsigned int flags = 0;
+-
+-            if (write)
+-                flags |= FOLL_WRITE;
+-            if (force)
+-                flags |= FOLL_FORCE;
++    /* For kernel 7.0+, get_user_pages has 4 arguments: (start, nr_pages, gup_flags, pages)
++     * and get_user_pages_remote has 6 arguments: (mm, start, nr_pages, gup_flags, pages, locked)
++     */
++    #include <linux/mm.h>
++
++    static inline long NV_GET_USER_PAGES(unsigned long start,
++                                         unsigned long nr_pages,
++                                         int write,
++                                         int force,
++                                         struct page **pages,
++                                         struct vm_area_struct **vmas)
++    {
++        unsigned int flags = 0;
+ 
+-            return get_user_pages(start, nr_pages, flags, pages, vmas);
+-        }
+-    #endif
+-#endif
++        if (write)
++            flags |= FOLL_WRITE;
++        if (force)
++            flags |= FOLL_FORCE;
++
++        return get_user_pages(start, nr_pages, flags, pages);
++    }
++
++    static inline long NV_GET_USER_PAGES_REMOTE(struct mm_struct *mm,
++                                                unsigned long start,
++                                                unsigned long nr_pages,
++                                                unsigned int gup_flags,
++                                                struct page **pages,
++                                                int *locked)
++    {
++        return get_user_pages_remote(mm, start, nr_pages, gup_flags, pages, locked);
++    }
+ 
+ /* get_user_pages_remote() was added by:
+  *   2016 Feb 12: 1e9877902dc7e11d2be038371c6fbf2dfcd469d7
+@@ -120,41 +101,27 @@
+  */
+ 
+ #if defined(NV_GET_USER_PAGES_REMOTE_PRESENT)
+-    #if defined(NV_GET_USER_PAGES_REMOTE_HAS_WRITE_AND_FORCE_ARGS)
+-        #define NV_GET_USER_PAGES_REMOTE    get_user_pages_remote
+-    #else
++    /* Kernel 7.0: 6-arg signature without task_struct */
++    /* Already defined above at lines 72-80 */
++#else
++    #if !defined(NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS)
++        /*
++         * Kernel 4.6+: get_user_pages(start, nr_pages, gup_flags, pages) - no vmas
++         * Note: absence of NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS means gup_flags is present
++         * but kernel 7.0 removed vmas parameter
++         */
+         static inline long NV_GET_USER_PAGES_REMOTE(struct task_struct *tsk,
+                                                     struct mm_struct *mm,
+                                                     unsigned long start,
+                                                     unsigned long nr_pages,
+-                                                    int write,
+-                                                    int force,
++                                                    unsigned int gup_flags,
+                                                     struct page **pages,
+                                                     struct vm_area_struct **vmas)
+         {
+-            unsigned int flags = 0;
+-
+-            if (write)
+-                flags |= FOLL_WRITE;
+-            if (force)
+-                flags |= FOLL_FORCE;
+-
+-        #if defined(NV_GET_USER_PAGES_REMOTE_HAS_LOCKED_ARG)
+-
+-               return get_user_pages_remote(tsk, mm, start, nr_pages, flags,
+-                                            pages, vmas, NULL);
+-
+-        #else
+-
+-               return get_user_pages_remote(tsk, mm, start, nr_pages, flags,
+-                                            pages, vmas);
+-
+-        #endif
+-
++            (void)vmas; /* unused in kernel 7.0+ */
++            return get_user_pages(start, nr_pages, gup_flags, pages);
+         }
+-    #endif
+-#else
+-    #if defined(NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS)
++    #elif defined(NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS)
+         #define NV_GET_USER_PAGES_REMOTE    get_user_pages
+     #else
+         #include <linux/mm.h>
+@@ -170,12 +137,8 @@
+                                                     struct vm_area_struct **vmas)
+         {
+             unsigned int flags = 0;
+-
+-            if (write)
+-                flags |= FOLL_WRITE;
+-            if (force)
+-                flags |= FOLL_FORCE;
+-
++            if (write) flags |= FOLL_WRITE;
++            if (force) flags |= FOLL_FORCE;
+             return get_user_pages(tsk, mm, start, nr_pages, flags, pages, vmas);
+         }
+     #endif
+@@ -207,6 +170,8 @@
+     {
+     #if defined(NV_VM_FAULT_HAS_ADDRESS)
+         return vmf->address;
++    #elif defined(NV_VM_FAULT_HAS_REAL_ADDRESS)
++        return vmf->real_address;
+     #else
+         return (unsigned long)(vmf->virtual_address);
+     #endif
+diff -ruN --no-dereference a/common/inc/nv-procfs.h b/common/inc/nv-procfs.h
+--- a/common/inc/nv-procfs.h	2026-06-15 01:29:50.717107664 +0800
++++ b/common/inc/nv-procfs.h	2026-06-15 01:29:50.718101997 +0800
+@@ -34,10 +34,7 @@
+ #define NV_SET_PROC_ENTRY_OWNER(entry)
+ #endif
+ 
+-#if defined(NV_PROC_CREATE_DATA_PRESENT)
+-# define NV_CREATE_PROC_ENTRY(name,mode,parent,fops,__data) \
+-    proc_create_data(name, mode, parent, fops, __data)
+-#else
++#if !defined(NV_PROC_CREATE_DATA_PRESENT)
+ # define NV_CREATE_PROC_ENTRY(name,mode,parent,fops,__data) \
+    ({                                                       \
+         struct proc_dir_entry *__entry;                     \
+@@ -50,16 +47,24 @@
+         }                                                   \
+         __entry;                                            \
+     })
++#else
++# define NV_CREATE_PROC_ENTRY(name,mode,parent,fops,__data) \
++    proc_create_data(name, mode, parent, fops, __data)
+ #endif
+ 
++#define NV_PROC_FOPS struct proc_ops
++
++#define NV_PROC_WRITE_PTR(name) .proc_write = nv_procfs_write_##name
++#define NV_PROC_READ_PTR(name) .proc_read = nv_procfs_read_##name
++
+ #define NV_CREATE_PROC_FILE(filename,parent,__name,__data)               \
+    ({                                                                    \
+         struct proc_dir_entry *__entry;                                  \
+         int mode = (S_IFREG | S_IRUGO);                                  \
+-        const struct file_operations *fops = &nv_procfs_##__name##_fops; \
+-        if (fops->write != 0)                                            \
++        const NV_PROC_FOPS *fops = &nv_procfs_##__name##_fops; \
++        if (fops->proc_write != 0)                                            \
+             mode |= S_IWUSR;                                             \
+-        __entry = NV_CREATE_PROC_ENTRY(filename, mode, parent, fops,     \
++        __entry = proc_create_data(filename, mode, parent, fops,     \
+             __data);                                                     \
+         __entry;                                                         \
+     })
+@@ -93,7 +98,7 @@
+ #if defined(NV_PDE_DATA_PRESENT)
+ # define NV_PDE_DATA(inode) PDE_DATA(inode)
+ #else
+-# define NV_PDE_DATA(inode) PDE(inode)->data
++# define NV_PDE_DATA(inode) pde_data(inode)
+ #endif
+ 
+ #if defined(NV_PROC_REMOVE_PRESENT)
+@@ -114,12 +119,11 @@
+             NV_PDE_DATA(inode));                                              \
+     }                                                                         \
+                                                                               \
+-    static const struct file_operations nv_procfs_##__name##_fops = {         \
+-        .owner      = THIS_MODULE,                                            \
+-        .open       = nv_procfs_open_##__name,                                \
+-        .read       = seq_read,                                               \
+-        .llseek     = seq_lseek,                                              \
+-        .release    = single_release,                                         \
++    static const NV_PROC_FOPS nv_procfs_##__name##_fops = {                  \
++        .proc_open       = nv_procfs_open_##__name,                                \
++        .proc_read       = seq_read,                                               \
++        .proc_lseek     = seq_lseek,                                              \
++        .proc_release    = single_release,                                         \
+     };
+ 
+ #endif  /* CONFIG_PROC_FS */
+diff -ruN --no-dereference a/common/inc/nv-time.h b/common/inc/nv-time.h
+--- a/common/inc/nv-time.h	2026-06-15 01:29:50.746236921 +0800
++++ b/common/inc/nv-time.h	2026-06-15 01:29:50.747445203 +0800
+@@ -27,20 +27,9 @@
+ 
+ #include <linux/ktime.h>
+ 
+-static inline void nv_gettimeofday(struct timeval *tv)
++static inline void nv_gettimeofday(struct timespec64 *tv)
+ {
+-#ifdef NV_DO_GETTIMEOFDAY_PRESENT
+-    do_gettimeofday(tv);
+-#else
+-    struct timespec64 now;
+-
+-    ktime_get_real_ts64(&now);
+-
+-    *tv = (struct timeval) {
+-        .tv_sec = now.tv_sec,
+-        .tv_usec = now.tv_nsec/1000,
+-    };
+-#endif // NV_DO_GETTIMEOFDAY_PRESENT
++    ktime_get_real_ts64(tv);
+ }
+ 
+ #endif // __NV_TIME_H__
+diff -ruN --no-dereference a/common/inc/nv-timer.h b/common/inc/nv-timer.h
+--- a/common/inc/nv-timer.h	2026-06-15 01:29:50.595636479 +0800
++++ b/common/inc/nv-timer.h	2026-06-15 01:29:50.596926346 +0800
+@@ -53,14 +53,7 @@
+                                   void (*callback)(struct nv_timer *nv_timer))
+ {
+     nv_timer->nv_timer_callback = callback;
+-
+-#if defined(NV_TIMER_SETUP_PRESENT)
+     timer_setup(&nv_timer->kernel_timer, nv_timer_callback_typed_data, 0);
+-#else
+-    init_timer(&nv_timer->kernel_timer);
+-    nv_timer->kernel_timer.function = nv_timer_callback_anon_data;
+-    nv_timer->kernel_timer.data = (unsigned long)nv_timer;
+-#endif
+ }
+ 
+ #endif // __NV_TIMER_H__
+diff -ruN --no-dereference a/conftest.sh b/conftest.sh
+--- a/conftest.sh	2026-06-15 01:29:47.517465930 +0800
++++ b/conftest.sh	2026-06-15 01:29:47.518521454 +0800
+@@ -141,10 +141,10 @@
+ build_cflags() {
+     BASE_CFLAGS="-O2 -D__KERNEL__ \
+ -DKBUILD_BASENAME=\"#conftest$$\" -DKBUILD_MODNAME=\"#conftest$$\" \
+--nostdinc -isystem $ISYSTEM"
++-std=gnu11 -nostdinc -isystem $ISYSTEM"
+ 
+     if [ "$OUTPUT" != "$SOURCES" ]; then
+-        OUTPUT_CFLAGS="-I$OUTPUT/include2 -I$OUTPUT/include"
++        OUTPUT_CFLAGS="-I$OUTPUT/include -I$OUTPUT/include/generated"
+         if [ -f "$OUTPUT/include/generated/autoconf.h" ]; then
+             AUTOCONF_FILE="$OUTPUT/include/generated/autoconf.h"
+         else
+@@ -164,7 +164,7 @@
+         MACH_CFLAGS="-I$HEADERS/asm/mach-xen"
+     fi
+ 
+-    SOURCE_HEADERS="$HEADERS"
++    SOURCE_HEADERS="$SOURCES/include"
+     SOURCE_ARCH_HEADERS="$SOURCES/arch/$KERNEL_ARCH/include"
+     OUTPUT_HEADERS="$OUTPUT/include"
+     OUTPUT_ARCH_HEADERS="$OUTPUT/arch/$KERNEL_ARCH/include"
+@@ -191,15 +191,127 @@
+     MACH_CFLAGS="$MACH_CFLAGS -I$SOURCE_HEADERS/asm-$KERNEL_ARCH/mach-default"
+     MACH_CFLAGS="$MACH_CFLAGS -I$SOURCE_ARCH_HEADERS/asm/mach-default"
+ 
+-    CFLAGS="$BASE_CFLAGS $MACH_CFLAGS $OUTPUT_CFLAGS -include $AUTOCONF_FILE"
+-    CFLAGS="$CFLAGS -I$SOURCE_HEADERS"
+-    CFLAGS="$CFLAGS -I$SOURCE_HEADERS/uapi"
+-    CFLAGS="$CFLAGS -I$SOURCE_HEADERS/xen"
+-    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/generated/uapi"
+-    CFLAGS="$CFLAGS -I$SOURCE_ARCH_HEADERS"
+-    CFLAGS="$CFLAGS -I$SOURCE_ARCH_HEADERS/uapi"
++    CFLAGS="$BASE_CFLAGS $MACH_CFLAGS $OUTPUT_CFLAGS"
++    CFLAGS="$CFLAGS -I$OUTPUT_ARCH_HEADERS"
+     CFLAGS="$CFLAGS -I$OUTPUT_ARCH_HEADERS/generated"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/generated"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/generated/uapi"
++    CFLAGS="$CFLAGS -I$OUTPUT_ARCH_HEADERS/uapi"
+     CFLAGS="$CFLAGS -I$OUTPUT_ARCH_HEADERS/generated/uapi"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/uapi"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/generated/uapi"
++    CFLAGS="$CFLAGS -include $AUTOCONF_FILE"
++    CFLAGS="$CFLAGS -include linux/compiler-version.h"
++    CFLAGS="$CFLAGS -include linux/kconfig.h"
++    CFLAGS="$CFLAGS -I$OUTPUT_HEADERS/ubuntu/include"
++    CFLAGS="$CFLAGS -include linux/compiler_types.h"
++    CFLAGS="$CFLAGS -D__KERNEL__"
++    CFLAGS="$CFLAGS -std=gnu11"
++    CFLAGS="$CFLAGS -fshort-wchar"
++    CFLAGS="$CFLAGS -funsigned-char"
++    CFLAGS="$CFLAGS -fno-common"
++    CFLAGS="$CFLAGS -fno-PIE"
++    CFLAGS="$CFLAGS -fno-strict-aliasing"
++    CFLAGS="$CFLAGS -mno-sse"
++    CFLAGS="$CFLAGS -mno-mmx"
++    CFLAGS="$CFLAGS -mno-sse2"
++    CFLAGS="$CFLAGS -mno-3dnow"
++    CFLAGS="$CFLAGS -mno-avx"
++    CFLAGS="$CFLAGS -mno-sse4a"
++    CFLAGS="$CFLAGS -fcf-protection=none"
++    CFLAGS="$CFLAGS -m64"
++    CFLAGS="$CFLAGS -falign-jumps=1"
++    CFLAGS="$CFLAGS -falign-loops=1"
++    CFLAGS="$CFLAGS -mno-80387"
++    CFLAGS="$CFLAGS -mno-fp-ret-in-387"
++    CFLAGS="$CFLAGS -mpreferred-stack-boundary=3"
++    CFLAGS="$CFLAGS -mskip-rax-setup"
++    CFLAGS="$CFLAGS -march=x86-64"
++    CFLAGS="$CFLAGS -mtune=generic"
++    CFLAGS="$CFLAGS -mno-red-zone"
++    CFLAGS="$CFLAGS -mcmodel=kernel"
++    CFLAGS="$CFLAGS -mstack-protector-guard-reg=gs"
++    CFLAGS="$CFLAGS -mstack-protector-guard-symbol=__ref_stack_chk_guard"
++    CFLAGS="$CFLAGS -Wno-sign-compare"
++    CFLAGS="$CFLAGS -fno-asynchronous-unwind-tables"
++    CFLAGS="$CFLAGS -mindirect-branch=thunk-extern"
++    CFLAGS="$CFLAGS -mindirect-branch-register"
++    CFLAGS="$CFLAGS -mindirect-branch-cs-prefix"
++    CFLAGS="$CFLAGS -mfunction-return=thunk-extern"
++    CFLAGS="$CFLAGS -fno-jump-tables"
++    CFLAGS="$CFLAGS -mharden-sls=all"
++    CFLAGS="$CFLAGS -fpatchable-function-entry=16,16"
++    CFLAGS="$CFLAGS -fno-delete-null-pointer-checks"
++    CFLAGS="$CFLAGS -O2"
++    CFLAGS="$CFLAGS -fno-allow-store-data-races"
++    CFLAGS="$CFLAGS -fstack-protector-strong"
++    CFLAGS="$CFLAGS -fno-omit-frame-pointer"
++    CFLAGS="$CFLAGS -fno-optimize-sibling-calls"
++    CFLAGS="$CFLAGS -ftrivial-auto-var-init=zero"
++    CFLAGS="$CFLAGS -fzero-init-padding-bits=all"
++    CFLAGS="$CFLAGS -fno-stack-clash-protection"
++    CFLAGS="$CFLAGS -fzero-call-used-regs=used-gpr"
++    CFLAGS="$CFLAGS -pg"
++    CFLAGS="$CFLAGS -mrecord-mcount"
++    CFLAGS="$CFLAGS -mfentry"
++    CFLAGS="$CFLAGS -DCC_USING_FENTRY"
++    CFLAGS="$CFLAGS -fmin-function-alignment=16"
++    CFLAGS="$CFLAGS -fstrict-flex-arrays=3"
++    CFLAGS="$CFLAGS -fms-extensions"
++    CFLAGS="$CFLAGS -fno-strict-overflow"
++    CFLAGS="$CFLAGS -fno-stack-check"
++    CFLAGS="$CFLAGS -fconserve-stack"
++    CFLAGS="$CFLAGS -fno-builtin-wcslen"
++    CFLAGS="$CFLAGS -Wall"
++    CFLAGS="$CFLAGS -Wextra"
++    CFLAGS="$CFLAGS -Wundef"
++    CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
++    CFLAGS="$CFLAGS -Werror=implicit-int"
++    CFLAGS="$CFLAGS -Werror=return-type"
++    CFLAGS="$CFLAGS -Werror=strict-prototypes"
++    CFLAGS="$CFLAGS -Wno-format-security"
++    CFLAGS="$CFLAGS -Wno-trigraphs"
++    CFLAGS="$CFLAGS -Wno-frame-address"
++    CFLAGS="$CFLAGS -Wno-address-of-packed-member"
++    CFLAGS="$CFLAGS -Wmissing-declarations"
++    CFLAGS="$CFLAGS -Wmissing-prototypes"
++    CFLAGS="$CFLAGS -Wframe-larger-than=1024"
++    CFLAGS="$CFLAGS -Wno-main"
++    CFLAGS="$CFLAGS -Wno-type-limits"
++    CFLAGS="$CFLAGS -Wno-dangling-pointer"
++    CFLAGS="$CFLAGS -Wvla-larger-than=1"
++    CFLAGS="$CFLAGS -Wno-pointer-sign"
++    CFLAGS="$CFLAGS -Wcast-function-type"
++    CFLAGS="$CFLAGS -Wno-unterminated-string-initialization"
++    CFLAGS="$CFLAGS -Wno-array-bounds"
++    CFLAGS="$CFLAGS -Wno-stringop-overflow"
++    CFLAGS="$CFLAGS -Wno-alloc-size-larger-than"
++    CFLAGS="$CFLAGS -Wimplicit-fallthrough=5"
++    CFLAGS="$CFLAGS -Werror=date-time"
++    CFLAGS="$CFLAGS -Werror=incompatible-pointer-types"
++    CFLAGS="$CFLAGS -Werror=designated-init"
++    CFLAGS="$CFLAGS -Wenum-conversion"
++    CFLAGS="$CFLAGS -Wunused"
++    CFLAGS="$CFLAGS -Wno-unused-but-set-variable"
++    CFLAGS="$CFLAGS -Wno-unused-const-variable"
++    CFLAGS="$CFLAGS -Wno-packed-not-aligned"
++    CFLAGS="$CFLAGS -Wno-format-overflow"
++    CFLAGS="$CFLAGS -Wno-format-truncation"
++    CFLAGS="$CFLAGS -Wno-stringop-truncation"
++    CFLAGS="$CFLAGS -Wno-override-init"
++    CFLAGS="$CFLAGS -Wno-missing-field-initializers"
++    CFLAGS="$CFLAGS -Wno-shift-negative-value"
++    CFLAGS="$CFLAGS -Wno-maybe-uninitialized"
++    CFLAGS="$CFLAGS -Wno-sign-compare"
++    CFLAGS="$CFLAGS -Wno-unused-parameter"
++    CFLAGS="$CFLAGS -g"
++    CFLAGS="$CFLAGS -gdwarf-5"
++    CFLAGS="$CFLAGS -isystem /usr/lib/gcc/x86_64-linux-gnu/15/include"
++    CFLAGS="$CFLAGS -fsanitize=bounds-strict"
++    CFLAGS="$CFLAGS -fsanitize=shift"
++    CFLAGS="$CFLAGS -fsanitize=bool"
++    CFLAGS="$CFLAGS -fsanitize=enum"
+ 
+     if [ -n "$BUILD_PARAMS" ]; then
+         CFLAGS="$CFLAGS -D$BUILD_PARAMS"
+@@ -515,6 +627,20 @@
+             compile_check_conftest "$CODE" "NV_SET_PAGES_UC_PRESENT" "" "functions"
+         ;;
+ 
++        kmap_local_page)
++            #
++            # Check if kmap_local_page() is available (kernel 5.9+)
++            #
++            CODE="
++            #include <linux/highmem.h>
++            void conftest_kmap_local_page(void) {
++                void *v = kmap_local_page(NULL);
++                kunmap_local(v);
++            }"
++
++            compile_check_conftest "$CODE" "NV_KMAP_LOCAL_PAGE_PRESENT" "" "functions"
++        ;;
++
+         outer_flush_all)
+             #
+             # Determine if the outer_cache_fns struct has flush_all member.
+@@ -1087,15 +1213,37 @@
+             # vmf->address instead of of vmf->virtual_address") in v4.10
+             # (2016-12-14)
+             #
++            # Note: vm_fault has anonymous const struct, fields accessed via vmf.address
++            # Use struct instance to check member exists
+             CODE="
+             #include <linux/mm.h>
+             int conftest_vm_fault_has_address(void) {
+-                return offsetof(struct vm_fault, address);
++                struct vm_fault vmf = {};
++                (void)&vmf.address;
++                return 0;
+             }"
+ 
+             compile_check_conftest "$CODE" "NV_VM_FAULT_HAS_ADDRESS" "" "types"
+         ;;
+ 
++        vm_fault_has_real_address)
++            #
++            # Determine if the 'vm_fault' structure has 'real_address' field.
++            # Added in kernel 5.10+ as replacement for virtual_address.
++            #
++            # Note: vm_fault has anonymous const struct, fields accessed via vmf.real_address
++            # Use struct instance to check member exists
++            CODE="
++            #include <linux/mm.h>
++            int conftest_vm_fault_has_real_address(void) {
++                struct vm_fault vmf = {};
++                (void)&vmf.real_address;
++                return 0;
++            }"
++
++            compile_check_conftest "$CODE" "NV_VM_FAULT_HAS_REAL_ADDRESS" "" "types"
++        ;;
++
+     kmem_cache_has_kobj_remove_work)
+             #
+             # Determine if the 'kmem_cache' structure has 'kobj_remove_work'.
+@@ -1461,9 +1609,10 @@
+             #
+             # Added by commit 7a4e7408c5ca ("userns: Add kuid_t and kgid_t
+             # and associated infrastructure in uidgid.h") in v3.5
++            # In kernel 7.0, kuid_t is defined as a struct in uidgid_types.h
+             #
+             CODE="
+-            #include <linux/sched.h>
++            #include <linux/uidgid_types.h>
+             kuid_t conftest_kuid_t;
+             "
+ 
+@@ -2357,22 +2506,21 @@
+             # commit 768ae309a961 ("mm: replace get_user_pages() write/force
+             # parameters with gup_flags") in v4.9 (2016-10-13)
+             #
++            # Kernel 7.0 removed vmas parameter:
++            # get_user_pages(start, nr_pages, gup_flags, pages) - 4 args
++            #
+             # linux-4.4.168 cherry-picked commit 768ae309a961 without
+             # c12d2da56d0e which is covered in Conftest #3.
+             #
+-            # Conftest #1: Check if get_user_pages accepts 6 arguments.
+-            # Return if true.
+-            # Fall through to conftest #2 on failure.
++            # Conftest #1: Check if get_user_pages accepts 6 arguments (write/force + vmas).
++            # Call the function with 6 args - if it compiles, signature exists.
+             #
+             echo "$CONFTEST_PREAMBLE
+             #include <linux/mm.h>
+-            long get_user_pages(unsigned long start,
+-                                unsigned long nr_pages,
+-                                int write,
+-                                int force,
+-                                struct page **pages,
+-                                struct vm_area_struct **vmas) {
+-                return 0;
++            void conftest_get_user_pages(void) {
++                struct page *pages;
++                struct vm_area_struct *vmas;
++                get_user_pages(0, 0, 0, 0, &pages, &vmas);
+             }" > conftest$$.c
+ 
+             $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
+@@ -2384,20 +2532,14 @@
+                 return
+             fi
+ 
+-            # Conftest #2: Check if get_user_pages has gup_flags instead of
+-            # write and force parameters. And that gup doesn't accept a
+-            # task_struct and mm_struct as its first arguments.
+-            # Return if available.
+-            # Fall through to conftest #3 on failure.
+-
++            # Conftest #2: Check if get_user_pages has 5 arguments (gup_flags + vmas, no task/mm).
++            # Call with 5 args: start, nr_pages, gup_flags, pages, vmas
+             echo "$CONFTEST_PREAMBLE
+             #include <linux/mm.h>
+-            long get_user_pages(unsigned long start,
+-                                unsigned long nr_pages,
+-                                unsigned int gup_flags,
+-                                struct page **pages,
+-                                struct vm_area_struct **vmas) {
+-                return 0;
++            void conftest_get_user_pages(void) {
++                struct page *pages;
++                struct vm_area_struct *vmas;
++                get_user_pages(0, 0, 0, &pages, &vmas);
+             }" > conftest$$.c
+ 
+             $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
+@@ -2410,22 +2552,17 @@
+                 return
+             fi
+ 
+-            # Conftest #3: Check if get_user_pages has gup_flags instead of
+-            # write and force parameters AND that gup has task_struct and
+-            # mm_struct as its first arguments.
+-            # Return if available.
+-            # Fall through to default case if absent.
+-
++            # Conftest #3: Check if get_user_pages has 7 arguments (task, mm, gup_flags, pages, vmas).
++            # Call with 7 args: task, mm, start, nr_pages, gup_flags, pages, vmas
+             echo "$CONFTEST_PREAMBLE
+             #include <linux/mm.h>
+-            long get_user_pages(struct task_struct *tsk,
+-                                struct mm_struct *mm,
+-                                unsigned long start,
+-                                unsigned long nr_pages,
+-                                unsigned int gup_flags,
+-                                struct page **pages,
+-                                struct vm_area_struct **vmas) {
+-                return 0;
++            #include <linux/sched.h>
++            void conftest_get_user_pages(void) {
++                struct task_struct *tsk;
++                struct mm_struct *mm;
++                struct page *pages;
++                struct vm_area_struct *vmas;
++                get_user_pages(tsk, mm, 0, 0, 0, &pages, &vmas);
+             }" > conftest$$.c
+ 
+             $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
+@@ -2438,6 +2575,27 @@
+                 return
+             fi
+ 
++            # Conftest #4: Check if get_user_pages has 4 arguments (kernel 7.0+):
++            # get_user_pages(start, nr_pages, gup_flags, pages) - no vmas, no task/mm
++            echo "$CONFTEST_PREAMBLE
++            #include <linux/mm.h>
++            void conftest_get_user_pages(void) {
++                struct page *pages;
++                get_user_pages(0, 0, 0, &pages);
++            }" > conftest$$.c
++
++            $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
++            rm -f conftest$$.c
++
++            if [ -f conftest$$.o ]; then
++                echo "#undef NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS" | append_conftest "functions"
++                echo "#undef NV_GET_USER_PAGES_HAS_TASK_STRUCT" | append_conftest "functions"
++                echo "#define NV_GET_USER_PAGES_4_ARGS" | append_conftest "functions"
++                rm -f conftest$$.o
++                return
++            fi
++
++            # Default fallback - assume old signature
+             echo "#define NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS" | append_conftest "functions"
+             echo "#define NV_GET_USER_PAGES_HAS_TASK_STRUCT" | append_conftest "functions"
+ 
+@@ -3766,6 +3924,14 @@
+         exit $?
+     ;;
+ 
++
++    test_kernel_headers_with_conftest)
++        # Generate headers.h first, then create conftest.h as a copy
++        test_headers
++        cp "$OUTPUT/conftest/headers.h" "$OUTPUT/conftest/conftest.h" 2>/dev/null || true
++        exit $?
++    ;;
++
+ 
+     build_cflags)
+         #
+diff -ruN --no-dereference a/Kbuild b/Kbuild
+--- a/Kbuild	2026-06-15 01:29:48.137751055 +0800
++++ b/Kbuild	2026-06-15 01:29:48.138864767 +0800
+@@ -64,8 +64,39 @@
+ # $(EXTRA_CFLAGS) to ccflags-y for compatibility.
+ #
+ 
++# Use $(M) for external module source directory, not $(src) which points to kernel source
++# $(src) in Kbuild context = kernel source tree (/lib/modules/.../build)
++# $(M) = external module source directory (where this Kbuild resides)
++$(info NVIDIA Kbuild: M=$(M) src=$(src) obj=$(obj))
++
++# Add GCC system include path for stdarg.h, stddef.h, etc.
++GCC_INCLUDE_DIR := $(shell $(CC) -print-file-name=include 2>/dev/null)
++ccflags-y += -isystem $(GCC_INCLUDE_DIR)
++
++ccflags-y += -I$(src)/common/inc
++ccflags-y += -I$(src)
++ccflags-y += -I$(M)/common/inc
++ccflags-y += -I$(M)
++ccflags-y += -I$(M)/nvidia
++ccflags-y += -I$(M)/nvidia-uvm
++ccflags-y += -I$(M)/nvidia-modeset
++ccflags-y += -I$(M)/nvidia-drm
++ccflags-y += -std=gnu11
++ccflags-y += -Wall -MD $(DEFINES) $(INCLUDES) -Wno-cast-qual -Wno-error -Wno-format-extra-args
++ccflags-y += -D__KERNEL__ -DMODULE -DNVRM -DNV_VERSION_STRING=\"418.113\" -Wno-unused-function -Wuninitialized -fno-strict-aliasing -mno-red-zone -mcmodel=kernel -DNV_UVM_ENABLE
++ccflags-y += $(call cc-option,-Werror=undef,)
++ccflags-y += -DNV_SPECTRE_V2=$(NV_SPECTRE_V2)
++
++# Also set EXTRA_CFLAGS for compatibility with older kernels
++EXTRA_CFLAGS += -isystem $(GCC_INCLUDE_DIR)
+ EXTRA_CFLAGS += -I$(src)/common/inc
+ EXTRA_CFLAGS += -I$(src)
++EXTRA_CFLAGS += -I$(M)/common/inc
++EXTRA_CFLAGS += -I$(M)
++EXTRA_CFLAGS += -I$(M)/nvidia
++EXTRA_CFLAGS += -I$(M)/nvidia-uvm
++EXTRA_CFLAGS += -I$(M)/nvidia-modeset
++EXTRA_CFLAGS += -I$(M)/nvidia-drm
+ EXTRA_CFLAGS += -Wall -MD $(DEFINES) $(INCLUDES) -Wno-cast-qual -Wno-error -Wno-format-extra-args
+ EXTRA_CFLAGS += -D__KERNEL__ -DMODULE -DNVRM -DNV_VERSION_STRING=\"418.113\" -Wno-unused-function -Wuninitialized -fno-strict-aliasing -mno-red-zone -mcmodel=kernel -DNV_UVM_ENABLE
+ EXTRA_CFLAGS += $(call cc-option,-Werror=undef,)
+@@ -99,6 +130,7 @@
+ 
+ NV_CONFTEST_SCRIPT := $(src)/conftest.sh
+ NV_CONFTEST_HEADER := $(obj)/conftest/headers.h
++NV_CONFTEST_H := $(obj)/conftest/conftest.h
+ 
+ NV_CONFTEST_CMD := /bin/sh $(NV_CONFTEST_SCRIPT) \
+  "$(CC)" "$(HOST_CC)" $(ARCH) $(NV_KERNEL_SOURCES) $(NV_KERNEL_OUTPUT)
+@@ -113,6 +145,7 @@
+ 
+ NV_CONFTEST_HEADERS := $(obj)/conftest/patches.h
+ NV_CONFTEST_HEADERS += $(obj)/conftest/headers.h
++NV_CONFTEST_HEADERS += $(NV_CONFTEST_H)
+ NV_CONFTEST_HEADERS += $(NV_CONFTEST_COMPILE_TEST_HEADERS)
+ 
+ 
+@@ -125,8 +158,7 @@
+ $(obj)/conftest/compile-tests/%.h: $(NV_CONFTEST_SCRIPT) $(NV_CONFTEST_HEADER)
+ 	@mkdir -p $(obj)/conftest/compile-tests
+ 	@echo " CONFTEST: $(notdir $*)"
+-	@$(NV_CONFTEST_CMD) compile_tests '$(NV_CONFTEST_CFLAGS)' \
+-	 $(notdir $*) > $@
++	@$(NV_CONFTEST_CMD) compile_tests '$(NV_CONFTEST_CFLAGS)' $(notdir $*) > $@
+ 
+ #
+ # Concatenate a conftest/*.h header from its constituent compile test headers
+@@ -147,11 +179,190 @@
+ # provided by the module-specific Kbuild files.
+ #
+ 
+-NV_CONFTEST_FUNCTION_COMPILE_TESTS ?=
+-NV_CONFTEST_GENERIC_COMPILE_TESTS ?=
++NV_CONFTEST_FUNCTION_COMPILE_TESTS ?= \
++    kmap_local_page \
++    vmf_insert_pfn \
++    get_user_pages \
++    get_user_pages_remote \
++    timer_setup \
++    vm_insert_page \
++    remap_pfn_range \
++    follow_pfn \
++    acpi_device_id \
++    acpi_device_ops \
++    acpi_evaluate_integer \
++    acpi_op_remove \
++    acpi_walk_namespace \
++    acquire_console_sem \
++    backlight_device_register \
++    backlight_properties_type \
++    bitmap_clear \
++    change_page_attr \
++    compound_order \
++    console_lock \
++    cpuhp_setup_state \
++    dma_buf_owner \
++    dma_direct_map_resource \
++    dma_map_ops \
++    dma_map_resource \
++    dma_ops \
++    do_gettimeofday \
++    dom0_kernel_present \
++    drm_atomic_available \
++    drm_atomic_helper_connector_dpms \
++    drm_atomic_helper_crtc_destroy_state_has_crtc_arg \
++    drm_atomic_helper_disable_all \
++    drm_atomic_helper_swap_state_has_stall_arg \
++    drm_atomic_modeset_nonblocking_commit_available \
++    drm_atomic_state_ref_counting \
++    drm_available \
++    drm_bus_has_bus_type \
++    drm_bus_has_get_irq \
++    drm_bus_has_get_name \
++    drm_bus_present \
++    drm_connector_funcs_have_mode_in_name \
++    drm_connector_list_iter \
++    drm_crtc_helper_funcs_has_atomic_enable \
++    drm_crtc_state_has_connectors_changed \
++    drm_dev_put \
++    drm_dev_unref \
++    drm_driver_has_gem_prime_res_obj \
++    drm_driver_has_legacy_dev_list \
++    drm_driver_has_set_busid \
++    drm_driver_prime_flag_present \
++    drm_driver_unload_has_int_return_type \
++    drm_framebuffer_get \
++    drm_gem_object_get \
++    drm_gem_object_lookup \
++    drm_init_function_args \
++    drm_master_drop_has_from_release_arg \
++    drm_mode_config_funcs_has_atomic_state_alloc \
++    drm_mode_connector_list_update_has_merge_type_bits_arg \
++    drm_mode_object_find_has_file_priv_arg \
++    drm_reinit_primary_mode_group \
++    efi_enabled \
++    fatal_signal_pending \
++    fault_flags \
++    file_inode \
++    file_operations \
++    for_each_online_node \
++    get_configuration_option \
++    get_dma_ops \
++    get_num_physpages \
++    guess_module_signing_hash \
++    hash__remap_4k_pfn \
++    i2c_adapter \
++    ioremap_cache \
++    ioremap_wc \
++    irq_handler_t \
++    iterate_dir \
++    kbasename \
++    kernel_write \
++    kmem_cache_create \
++    kmem_cache_has_kobj_remove_work \
++    kref_has_refcount_of_type_refcount_t \
++    kstrtoull \
++    kuid_t \
++    list_cut_position \
++    list_is_first \
++    mdev_dev \
++    mdev_from_dev \
++    mdev_parent \
++    mdev_parent_dev \
++    mdev_uuid \
++    mm_context_t \
++    node_end_pfn \
++    node_states_n_memory \
++    noncoherent_swiotlb_dma_ops \
++    nvidia_grid_build \
++    nvidia_vgpu_hyperv_available \
++    nvidia_vgpu_kvm_build \
++    of_find_node_by_phandle \
++    of_get_ibm_chip_id \
++    of_get_property \
++    of_node_to_nid \
++    on_each_cpu \
++    outer_flush_all \
++    pci_bus_address \
++    pci_choose_state \
++    pci_dma_mapping_error \
++    pci_domain_nr \
++    pci_enable_msix_range \
++    pci_get_class \
++    pci_get_domain_bus_and_slot \
++    pci_remove_bus_device \
++    pci_stop_and_remove_bus_device \
++    pde_data \
++    phys_to_dma \
++    pm_message_t \
++    pm_vt_switch_required \
++    pnv_npu2_init_context \
++    pnv_pci_get_npu_dev \
++    proc_create_data \
++    proc_dir_entry \
++    proc_remove \
++    radix_tree_empty \
++    radix_tree_replace_slot \
++    register_acpi_notifier \
++    register_cpu_notifier \
++    request_threaded_irq \
++    scatterlist \
++    set_memory_array_uc \
++    set_memory_uc \
++    set_pages_uc \
++    sg_alloc_table \
++    sg_table \
++    smp_call_function \
++    strnstr \
++    swiotlb_dma_ops \
++    sysfs_slab_unlink \
++    task_struct \
++    usleep_range \
++    vfio_device_gfx_plane_info \
++    vfio_device_migration_info \
++    vfio_info_add_capability_has_cap_type_id_arg \
++    vfio_register_notifier \
++    vm_fault_has_address \
++    vm_fault_has_real_address \
++    vm_fault_present \
++    vm_operations_struct \
++    vm_ops_fault_removed_vma_arg \
++    vmbus_channel_has_ringbuffer_page \
++    vzalloc \
++    wait_on_bit_lock_argument_count \
++    write_cr4 \
++    xen_ioemu_inject_msi
++
++NV_CONFTEST_GENERIC_COMPILE_TESTS ?= \
++    true
++
+ NV_CONFTEST_MACRO_COMPILE_TESTS ?=
+-NV_CONFTEST_SYMBOL_COMPILE_TESTS ?=
+-NV_CONFTEST_TYPE_COMPILE_TESTS ?=
++
++NV_CONFTEST_SYMBOL_COMPILE_TESTS ?= \
++    address_space \
++    address_space_init_once \
++    atomic64_type \
++    atomic_long_type \
++    backing_dev_info \
++    fault_flags \
++    mm_context_t \
++    task_struct \
++    vm_operations_struct
++
++NV_CONFTEST_TYPE_COMPILE_TESTS ?= \
++    backlight_properties_type \
++    dma_buf_owner \
++    dma_map_ops \
++    dma_ops \
++    file_operations \
++    i2c_adapter \
++    irq_handler_t \
++    pm_message_t \
++    proc_dir_entry \
++    scatterlist \
++    sg_table \
++    swiotlb_dma_ops \
++    vm_fault_present
+ 
+ $(eval $(call NV_GENERATE_COMPILE_TEST_HEADER,functions,$(NV_CONFTEST_FUNCTION_COMPILE_TESTS)))
+ $(eval $(call NV_GENERATE_COMPILE_TEST_HEADER,generic,$(NV_CONFTEST_GENERIC_COMPILE_TESTS)))
+@@ -167,6 +378,11 @@
+ 	@mkdir -p $(obj)/conftest
+ 	@$(NV_CONFTEST_CMD) test_kernel_headers > $@
+ 
++$(NV_CONFTEST_H): $(NV_CONFTEST_SCRIPT) $(obj)/conftest/headers.h
++	@mkdir -p $(obj)/conftest
++	@cp $(obj)/conftest/headers.h $(NV_CONFTEST_H)
++	@echo "#define NV_CONFTEST_H_PRESENT" >> $(NV_CONFTEST_H)
++
+ clean-dirs := $(obj)/conftest
+ 
+ 
+diff -ruN --no-dereference a/nvidia/linux_nvswitch.c b/nvidia/linux_nvswitch.c
+--- a/nvidia/linux_nvswitch.c	2026-06-15 01:29:47.592248515 +0800
++++ b/nvidia/linux_nvswitch.c	2026-06-15 01:29:47.593552438 +0800
+@@ -1559,10 +1559,10 @@
+     void
+ )
+ {
+-    struct timespec ts;
++    struct timespec64 ts;
+ 
+-    getnstimeofday(&ts);
+-    return ((NvU64) timespec_to_ns(&ts));
++    ktime_get_real_ts64(&ts);
++    return ((NvU64) timespec64_to_ns(&ts));
+ }
+ 
+ void
+diff -ruN --no-dereference a/nvidia/nv-acpi.c b/nvidia/nv-acpi.c
+--- a/nvidia/nv-acpi.c	2026-06-15 01:29:47.994796732 +0800
++++ b/nvidia/nv-acpi.c	2026-06-15 01:29:47.996012521 +0800
+@@ -24,9 +24,9 @@
+ static int         nv_acpi_add             (struct acpi_device *);
+ 
+ #if !defined(NV_ACPI_DEVICE_OPS_REMOVE_ARGUMENT_COUNT) || (NV_ACPI_DEVICE_OPS_REMOVE_ARGUMENT_COUNT == 2)
+-static int         nv_acpi_remove_two_args(struct acpi_device *device, int type);
++static void        nv_acpi_remove_two_args(struct acpi_device *device);
+ #else
+-static int         nv_acpi_remove_one_arg(struct acpi_device *device);
++static void        nv_acpi_remove_one_arg(struct acpi_device *device);
+ #endif
+ 
+ static void        nv_acpi_event           (acpi_handle, u32, void *);
+@@ -222,6 +222,42 @@
+     return 0;
+ }
+ 
++static int nv_acpi_add_child(struct acpi_device *dev, void *data)
++{
++    nv_acpi_t *pNvAcpiObject = data;
++    nv_acpi_integer_t device_id = 0;
++    int status;
++
++    if (pNvAcpiObject->device_counter >= NV_MAXNUM_DISPLAY_DEVICES)
++    {
++        nv_printf(NV_DBG_ERRORS,
++                  "NVRM: nv_acpi_add: Total number of devices cannot exceed %d\n",
++                  NV_MAXNUM_DISPLAY_DEVICES);
++        return 1;
++    }
++
++    status = acpi_evaluate_integer(dev->handle, "_ADR", NULL, &device_id);
++    if (ACPI_FAILURE(status))
++        return 0;
++
++    device_id = (device_id & 0xffff);
++
++    if ((device_id != 0x100) && /* Not a known CRT device-id */
++        (device_id != 0x200) && /* Not a known TV device-id */
++        (device_id != 0x0110) && (device_id != 0x0118) && (device_id != 0x0400) && /* Not an LCD*/
++        (device_id != 0x0111) && (device_id != 0x0120) && (device_id != 0x0300)) /* Not a known DVI device-id */
++    {
++        pNvAcpiObject->default_display_mask = 1;
++        return 1;
++    }
++
++    pNvAcpiObject->pNvVideo[pNvAcpiObject->device_counter].dev_id = device_id;
++    pNvAcpiObject->pNvVideo[pNvAcpiObject->device_counter].dev_handle = dev->handle;
++    pNvAcpiObject->device_counter++;
++
++    return 0;
++}
++
+ static int nv_acpi_add(struct acpi_device *device)
+ {
+     /*
+@@ -234,9 +270,7 @@
+     union acpi_object control_argument_0 = { ACPI_TYPE_INTEGER };
+     struct acpi_object_list control_argument_list = { 0, NULL };
+     nvidia_stack_t *sp = NULL;
+-    struct list_head *node, *next;
+     nv_acpi_integer_t device_id = 0;
+-    int device_counter = 0;
+ 
+     status = nv_kmem_cache_alloc_stack(&sp);
+     if (status != 0)
+@@ -262,48 +296,8 @@
+     pNvAcpiObject->sp = sp;
+ 
+     // grab handles to all the important nodes representing devices
+-
+-    list_for_each_safe(node, next, &device->children) 
+-    {
+-        struct acpi_device *dev =
+-            list_entry(node, struct acpi_device, node);
+-
+-        if (!dev)
+-            continue;
+-
+-        if (device_counter == NV_MAXNUM_DISPLAY_DEVICES)
+-        {
+-            nv_printf(NV_DBG_ERRORS, 
+-                      "NVRM: nv_acpi_add: Total number of devices cannot exceed %d\n", 
+-                      NV_MAXNUM_DISPLAY_DEVICES);
+-            break;
+-        }
+-
+-        status =
+-            acpi_evaluate_integer(dev->handle, "_ADR", NULL, &device_id);
+-        if (ACPI_FAILURE(status))
+-            /* Couldnt query device_id for this device */
+-            continue;
+-
+-        device_id = (device_id & 0xffff);
+-
+-        if ((device_id != 0x100) && /* Not a known CRT device-id */ 
+-            (device_id != 0x200) && /* Not a known TV device-id */ 
+-            (device_id != 0x0110) && (device_id != 0x0118) && (device_id != 0x0400) && /* Not an LCD*/
+-            (device_id != 0x0111) && (device_id != 0x0120) && (device_id != 0x0300)) /* Not a known DVI device-id */ 
+-        {
+-            /* This isnt a known device Id. 
+-               Do default switching on this system. */
+-            pNvAcpiObject->default_display_mask = 1;
+-            break;
+-        }
+-
+-        pNvAcpiObject->pNvVideo[device_counter].dev_id = device_id;
+-        pNvAcpiObject->pNvVideo[device_counter].dev_handle = dev->handle;
+-    
+-        device_counter++;
+-
+-    }
++    pNvAcpiObject->device_counter = 0;
++    acpi_dev_for_each_child(device, nv_acpi_add_child, pNvAcpiObject);
+ 
+     // arg 0, bits 1:0, 0 = enable events
+     control_argument_0.integer.type = ACPI_TYPE_INTEGER;
+@@ -340,9 +334,9 @@
+ }
+ 
+ #if !defined(NV_ACPI_DEVICE_OPS_REMOVE_ARGUMENT_COUNT) || (NV_ACPI_DEVICE_OPS_REMOVE_ARGUMENT_COUNT == 2)
+-static int nv_acpi_remove_two_args(struct acpi_device *device, int type)
++static void nv_acpi_remove_two_args(struct acpi_device *device)
+ #else
+-static int nv_acpi_remove_one_arg(struct acpi_device *device)
++static void nv_acpi_remove_one_arg(struct acpi_device *device)
+ #endif
+ {
+     /*
+@@ -393,7 +387,7 @@
+         device->driver_data = NULL;
+     }
+ 
+-    return status;
++    return;
+ }
+ 
+ /*
+@@ -650,9 +644,9 @@
+             if (!nvif_parent_gpu_handle) /* unknown error */
+                 break;
+             
+-            retVal = acpi_bus_get_device(nvif_parent_gpu_handle, &device);
++            device = acpi_get_acpi_dev(nvif_parent_gpu_handle);
+ 
+-            if (ACPI_FAILURE(retVal) || !device)
++            if (!device)
+                 break;
+ 
+             if (device->driver_data)
+@@ -684,9 +678,9 @@
+         // devices
+         if (psr_nv_acpi_object == NULL)
+         {
+-            retVal = acpi_bus_get_device(psr_device_handle, &device);
++            device = acpi_get_acpi_dev(psr_device_handle);
+ 
+-            if (!(ACPI_FAILURE(retVal) || !device))
++            if (device)
+             {
+                 psr_nv_acpi_object = nv_install_notifier(device, nv_acpi_powersource_hotplug_event);
+             }
+@@ -756,11 +750,15 @@
+     if (nvif_parent_gpu_handle == NULL) 
+         return;
+ 
+-    acpi_bus_get_device(nvif_parent_gpu_handle, &device);
++    device = acpi_get_acpi_dev(nvif_parent_gpu_handle);
+ 
+-    nv_uninstall_notifier(device->driver_data, nv_acpi_event);
++    if (device)
++    {
++        nv_uninstall_notifier(device->driver_data, nv_acpi_event);
+ 
+-    device->driver_data = NULL;
++        device->driver_data = NULL;
++        acpi_put_acpi_dev(device);
++    }
+     nvif_parent_gpu_handle = NULL;
+ 
+     return;
+@@ -918,7 +916,7 @@
+     }
+ 
+     return status;
+-}  
++}
+ 
+ /*
+  * This function executes an MXMI ACPI method.
+@@ -1294,6 +1292,28 @@
+ /*
+  * This function executes a _DDC ACPI method.
+  */
++static int nv_acpi_ddc_find_lcd(struct acpi_device *dev, void *data)
++{
++    acpi_handle *lcd_dev_handle = data;
++    nv_acpi_integer_t device_id = 0;
++    acpi_status status;
++
++    status = acpi_evaluate_integer(dev->handle, "_ADR", NULL, &device_id);
++    if (ACPI_FAILURE(status))
++        return 0;
++
++    device_id = (device_id & 0xffff);
++
++    if ((device_id == 0x0110) || (device_id == 0x0118) || (device_id == 0x0400))
++    {
++        *lcd_dev_handle = dev->handle;
++        nv_printf(NV_DBG_INFO, "NVRM: %s Found LCD: %x\n", __FUNCTION__, device_id);
++        return 1;
++    }
++
++    return 0;
++}
++
+ NV_STATUS NV_API_CALL nv_acpi_ddc_method(
+     nv_state_t *nv,
+     void *pEdidBuffer,
+@@ -1306,8 +1326,6 @@
+     union acpi_object *ddc;
+     union acpi_object ddc_arg0 = { ACPI_TYPE_INTEGER };
+     struct acpi_object_list input = { 1, &ddc_arg0 };
+-    struct list_head *node, *next;
+-    nv_acpi_integer_t device_id = 0;
+     NvU32 i;
+     acpi_handle dev_handle  = NULL;
+     acpi_handle lcd_dev_handle  = NULL;
+@@ -1318,9 +1336,9 @@
+     if (!dev_handle)
+         return NV_ERR_INVALID_ARGUMENT;
+ 
+-    status = acpi_bus_get_device(dev_handle, &device);
++    device = acpi_get_acpi_dev(dev_handle);
+ 
+-    if (ACPI_FAILURE(status) || !device)
++    if (!device)
+         return NV_ERR_INVALID_ARGUMENT;
+ 
+     if (!NV_MAY_SLEEP())
+@@ -1330,32 +1348,11 @@
+                   "NVRM: %s: invalid context!\n",
+                   __FUNCTION__);
+ #endif
++        acpi_put_acpi_dev(device);
+         return NV_ERR_NOT_SUPPORTED;
+     }
+ 
+-    list_for_each_safe(node, next, &device->children) 
+-    {
+-        struct acpi_device *dev =
+-            list_entry(node, struct acpi_device, node);
+-
+-        if (!dev)
+-            continue;
+-
+-        status = acpi_evaluate_integer(dev->handle, "_ADR", NULL, &device_id);
+-        if (ACPI_FAILURE(status))
+-            /* Couldnt query device_id for this device */
+-            continue;
+-
+-        device_id = (device_id & 0xffff);
+-
+-        if ((device_id == 0x0110) || (device_id == 0x0118) || (device_id == 0x0400)) /* Only for an LCD*/
+-        {
+-            lcd_dev_handle = dev->handle;
+-            nv_printf(NV_DBG_INFO, "NVRM: %s Found LCD: %x\n", __FUNCTION__, device_id);
+-            break;
+-        }
+-
+-    }
++    acpi_dev_for_each_child(device, nv_acpi_ddc_find_lcd, &lcd_dev_handle);
+ 
+     if (lcd_dev_handle == NULL)
+     {
+@@ -1405,6 +1402,7 @@
+     }
+  
+     kfree(output.pointer);
++    acpi_put_acpi_dev(device);
+     return NV_OK;             
+ }
+ 
+diff -ruN --no-dereference a/nvidia/nv.c b/nvidia/nv.c
+--- a/nvidia/nv.c	2026-06-15 01:29:47.716831552 +0800
++++ b/nvidia/nv.c	2026-06-15 01:29:47.718991611 +0800
+@@ -2963,7 +2963,7 @@
+     if (!nvl->tce_bypass_enabled)
+     {
+         NvU64 new_mask = (((NvU64)1) << phys_addr_bits) - 1;
+-        pci_set_dma_mask(nvl->dev, new_mask);
++        dma_set_mask(&nvl->dev->dev, new_mask);
+     }
+ }
+ 
+@@ -3737,7 +3737,7 @@
+ 
+     nv_printf(NV_DBG_INFO, "NVRM: stopping rc timer\n");
+     nv->rc_timer_enabled = 0;
+-    del_timer_sync(&nvl->rc_timer.kernel_timer);
++    timer_delete_sync(&nvl->rc_timer.kernel_timer);
+     nv_printf(NV_DBG_INFO, "NVRM: rc timer stopped\n");
+ 
+     return 0;
+@@ -4779,7 +4779,7 @@
+      * Otherwise, the DMA start address only needs to be set once, and it
+      * won't change afterward. Just return the cached value if asked again,
+      * to avoid the kernel printing redundant messages to the kernel
+-     * log when we call pci_set_dma_mask().
++     * log when we call dma_set_mask().
+      */
+     nvl = NV_GET_NVL_FROM_NV_STATE(nv);
+     if ((nv_tce_bypass_mode == NV_TCE_BYPASS_MODE_DISABLE) ||
+@@ -4830,7 +4830,7 @@
+      * as the starting address for all DMA mappings.
+      */
+     saved_dma_mask = dev->dma_mask;
+-    if (pci_set_dma_mask(dev, DMA_BIT_MASK(64)) != 0)
++    if (dma_set_mask(dev, DMA_BIT_MASK(64)) != 0)
+     {
+         goto done;
+     }
+@@ -4838,7 +4838,7 @@
+     dma_addr = pci_map_single(dev, NULL, 1, DMA_BIDIRECTIONAL);
+     if (pci_dma_mapping_error(dev, dma_addr))
+     {
+-        pci_set_dma_mask(dev, saved_dma_mask);
++        dma_set_mask(dev, saved_dma_mask);
+         goto done;
+     }
+ 
+@@ -4874,7 +4874,7 @@
+          */
+         nv_printf(NV_DBG_WARNINGS,
+             "NVRM: DMA window limited by platform\n");
+-        pci_set_dma_mask(dev, saved_dma_mask);
++        dma_set_mask(dev, saved_dma_mask);
+         goto done;
+     }
+     else if ((dma_addr & saved_dma_mask) != 0)
+@@ -4893,7 +4893,7 @@
+              */
+             nv_printf(NV_DBG_WARNINGS,
+                 "NVRM: DMA window limited by memory size\n");
+-            pci_set_dma_mask(dev, saved_dma_mask);
++            dma_set_mask(dev, saved_dma_mask);
+             goto done;
+         }
+     }
+diff -ruN --no-dereference a/nvidia/nv-dma.c b/nvidia/nv-dma.c
+--- a/nvidia/nv-dma.c	2026-06-15 01:29:47.687540411 +0800
++++ b/nvidia/nv-dma.c	2026-06-15 01:29:47.688592645 +0800
+@@ -27,9 +27,9 @@
+     NvU64 *va
+ )
+ {
+-    *va = pci_map_page(dma_map->dev, dma_map->pages[0], 0,
+-            dma_map->page_count * PAGE_SIZE, PCI_DMA_BIDIRECTIONAL);
+-    if (NV_PCI_DMA_MAPPING_ERROR(dma_map->dev, *va))
++    *va = dma_map_page(&dma_map->dev->dev, dma_map->pages[0], 0,
++            dma_map->page_count * PAGE_SIZE, DMA_BIDIRECTIONAL);
++    if (dma_mapping_error(&dma_map->dev->dev, *va))
+     {
+         return NV_ERR_OPERATING_SYSTEM;
+     }
+@@ -57,8 +57,8 @@
+ 
+ static void nv_dma_unmap_contig(nv_dma_map_t *dma_map)
+ {
+-    pci_unmap_page(dma_map->dev, dma_map->mapping.contig.dma_addr,
+-            dma_map->page_count * PAGE_SIZE, PCI_DMA_BIDIRECTIONAL);
++    dma_unmap_page(&dma_map->dev->dev, dma_map->mapping.contig.dma_addr,
++            dma_map->page_count * PAGE_SIZE, DMA_BIDIRECTIONAL);
+ }
+ 
+ static void nv_fill_scatterlist
+@@ -166,10 +166,10 @@
+ 
+     NV_FOR_EACH_DMA_SUBMAP(dma_map, submap, i)
+     {
+-        submap->sg_map_count = pci_map_sg(dma_map->dev,
++        submap->sg_map_count = dma_map_sg(&dma_map->dev->dev,
+                 NV_DMA_SUBMAP_SCATTERLIST(submap),
+                 NV_DMA_SUBMAP_SCATTERLIST_LENGTH(submap),
+-                PCI_DMA_BIDIRECTIONAL);
++                DMA_BIDIRECTIONAL);
+         if (submap->sg_map_count == 0)
+         {
+             status = NV_ERR_OPERATING_SYSTEM;
+@@ -197,9 +197,9 @@
+             break;
+         }
+ 
+-        pci_unmap_sg(dma_map->dev, NV_DMA_SUBMAP_SCATTERLIST(submap),
++        dma_unmap_sg(&dma_map->dev->dev, NV_DMA_SUBMAP_SCATTERLIST(submap),
+                 NV_DMA_SUBMAP_SCATTERLIST_LENGTH(submap),
+-                PCI_DMA_BIDIRECTIONAL);
++                DMA_BIDIRECTIONAL);
+     }
+ }
+ 
+diff -ruN --no-dereference a/nvidia/nvidia.Kbuild b/nvidia/nvidia.Kbuild
+--- a/nvidia/nvidia.Kbuild	2026-06-15 01:29:47.737857797 +0800
++++ b/nvidia/nvidia.Kbuild	2026-06-15 01:29:47.738951079 +0800
+@@ -156,6 +156,7 @@
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += do_gettimeofday
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += dma_direct_map_resource
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += vmf_insert_pfn
++NV_CONFTEST_FUNCTION_COMPILE_TESTS += kmap_local_page
+ 
+ NV_CONFTEST_SYMBOL_COMPILE_TESTS += is_export_symbol_gpl_of_node_to_nid
+ NV_CONFTEST_SYMBOL_COMPILE_TESTS += is_export_symbol_present_swiotlb_map_sg_attrs
+@@ -183,6 +184,7 @@
+ NV_CONFTEST_TYPE_COMPILE_TESTS += noncoherent_swiotlb_dma_ops
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_present
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_has_address
++NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_has_real_address
+ NV_CONFTEST_TYPE_COMPILE_TESTS += backlight_properties_type
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vmbus_channel_has_ringbuffer_page
+ NV_CONFTEST_TYPE_COMPILE_TESTS += kmem_cache_has_kobj_remove_work
+diff -ruN --no-dereference a/nvidia/nvlink_linux.c b/nvidia/nvlink_linux.c
+--- a/nvidia/nvlink_linux.c	2026-06-15 01:29:48.045264167 +0800
++++ b/nvidia/nvlink_linux.c	2026-06-15 01:29:48.046464191 +0800
+@@ -259,7 +259,7 @@
+ #if defined(NV_FILE_HAS_INODE)
+ #define NV_FILE_INODE(file) (file)->f_inode
+ #else
+-#define NV_FILE_INODE(file) (file)->f_dentry->d_inode
++#define NV_FILE_INODE(file) ((file)->f_inode)
+ #endif
+ 
+ static long nvlink_fops_unlocked_ioctl(struct file *file,
+@@ -503,43 +503,43 @@
+ 
+ static NvBool nv_timer_less_than
+ (
+-    const struct timeval *a,
+-    const struct timeval *b
++    const struct timespec64 *a,
++    const struct timespec64 *b
+ )
+ {
+-    return (a->tv_sec == b->tv_sec) ? (a->tv_usec < b->tv_usec) 
++    return (a->tv_sec == b->tv_sec) ? (a->tv_nsec < b->tv_nsec) 
+                                     : (a->tv_sec < b->tv_sec);
+ }
+ 
+ static void nv_timeradd
+ (
+-    const struct timeval    *a,
+-    const struct timeval    *b,
+-    struct timeval          *result
++    const struct timespec64    *a,
++    const struct timespec64    *b,
++    struct timespec64          *result
+ )
+ {
+     result->tv_sec = a->tv_sec + b->tv_sec;
+-    result->tv_usec = a->tv_usec + b->tv_usec;
+-    while (result->tv_usec >= 1000000)
++    result->tv_nsec = a->tv_nsec + b->tv_nsec;
++    while (result->tv_nsec >= NSEC_PER_SEC)
+     {
+         ++result->tv_sec;
+-        result->tv_usec -= 1000000;
++        result->tv_nsec -= NSEC_PER_SEC;
+     }
+ }
+ 
+ static void nv_timersub
+ (
+-    const struct timeval    *a,
+-    const struct timeval    *b,
+-    struct timeval          *result
++    const struct timespec64    *a,
++    const struct timespec64    *b,
++    struct timespec64          *result
+ )
+ {
+     result->tv_sec = a->tv_sec - b->tv_sec;
+-    result->tv_usec = a->tv_usec - b->tv_usec;
+-    while (result->tv_usec < 0)
++    result->tv_nsec = a->tv_nsec - b->tv_nsec;
++    while (result->tv_nsec < 0)
+     {
+         --(result->tv_sec);
+-        result->tv_usec += 1000000;
++        result->tv_nsec += NSEC_PER_SEC;
+     }
+ }
+ 
+@@ -551,11 +551,11 @@
+     unsigned long us;
+     unsigned long jiffies;
+     unsigned long mdelay_safe_msec;
+-    struct timeval tm_end, tm_aux;
++    struct timespec64 tm_end, tm_aux;
+ 
+     nv_gettimeofday(&tm_aux);
+ 
+-    if (in_irq() && (ms > NV_MAX_ISR_DELAY_MS))
++    if (!in_task() && (ms > NV_MAX_ISR_DELAY_MS))
+     {
+         return;
+     }
+@@ -567,7 +567,7 @@
+     }
+ 
+     us = ms * 1000;
+-    tm_end.tv_usec = us;
++    tm_end.tv_nsec = us * 1000;
+     tm_end.tv_sec = 0;
+     nv_timeradd(&tm_aux, &tm_end, &tm_end);
+ 
+@@ -582,7 +582,7 @@
+         // the requested timeout has expired, loop until less
+         // than a jiffie of the desired delay remains.
+         //
+-        current->state = TASK_INTERRUPTIBLE;
++        current->__state = TASK_INTERRUPTIBLE;
+         do
+         {
+             schedule_timeout(jiffies);
+@@ -590,7 +590,7 @@
+             if (nv_timer_less_than(&tm_aux, &tm_end))
+             {
+                 nv_timersub(&tm_end, &tm_aux, &tm_aux);
+-                us = tm_aux.tv_usec + tm_aux.tv_sec * 1000000;
++                us = tm_aux.tv_sec * 1000000 + tm_aux.tv_nsec / 1000;
+             }
+             else
+             {
+diff -ruN --no-dereference a/nvidia/nv-mmap.c b/nvidia/nv-mmap.c
+--- a/nvidia/nv-mmap.c	2026-06-15 01:29:47.666636323 +0800
++++ b/nvidia/nv-mmap.c	2026-06-15 01:29:47.667774468 +0800
+@@ -357,7 +357,7 @@
+     }
+ 
+     // Needed for the linux kernel for mapping compound pages
+-    vma->vm_flags |= VM_MIXEDMAP;
++    vm_flags_set(vma, VM_MIXEDMAP);
+ 
+     for (i = 0, addr = mmap_context->page_array[0]; i < pages;
+          addr = mmap_context->page_array[++i], start += PAGE_SIZE)
+@@ -483,7 +483,7 @@
+             }
+         }
+ 
+-        vma->vm_flags |= VM_IO;
++        vm_flags_set(vma, VM_IO);
+     }
+     else
+     {
+@@ -550,15 +550,15 @@
+ 
+         NV_PRINT_AT(NV_DBG_MEMINFO, at);
+ 
+-        vma->vm_flags |= (VM_IO | VM_LOCKED | VM_RESERVED);
+-        vma->vm_flags |= (VM_DONTEXPAND | VM_DONTDUMP);
++        vm_flags_set(vma, VM_IO | VM_LOCKED | VM_RESERVED);
++        vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+     }
+ 
+     if ((prot & NV_PROTECT_WRITEABLE) == 0)
+     {
+         vma->vm_page_prot = NV_PGPROT_READ_ONLY(vma->vm_page_prot);
+-        vma->vm_flags &= ~VM_WRITE;
+-        vma->vm_flags &= ~VM_MAYWRITE;
++        vm_flags_clear(vma, VM_WRITE);
++        vm_flags_clear(vma, VM_MAYWRITE);
+     }
+ 
+     vma->vm_ops = &nv_vm_ops;
+diff -ruN --no-dereference a/nvidia/nv-procfs.c b/nvidia/nv-procfs.c
+--- a/nvidia/nv-procfs.c	2026-06-15 01:29:47.647572610 +0800
++++ b/nvidia/nv-procfs.c	2026-06-15 01:29:47.648966155 +0800
+@@ -436,13 +436,12 @@
+     return ((status < 0) ? status : (int)count);
+ }
+ 
+-static struct file_operations nv_procfs_registry_fops = {
+-    .owner   = THIS_MODULE,
+-    .open    = nv_procfs_open_registry,
+-    .read    = seq_read,
+-    .write   = nv_procfs_write_file,
+-    .llseek  = seq_lseek,
+-    .release = nv_procfs_close_registry,
++static NV_PROC_FOPS nv_procfs_registry_fops = {
++    .proc_open    = nv_procfs_open_registry,
++    .proc_read    = seq_read,
++    .proc_write   = nv_procfs_write_file,
++    .proc_lseek   = seq_lseek,
++    .proc_release = nv_procfs_close_registry,
+ };
+ 
+ /*
+@@ -539,11 +538,10 @@
+     return status;
+ }
+ 
+-static struct file_operations nv_procfs_exercise_error_forwarding_fops = {
+-    .owner   = THIS_MODULE,
+-    .open    = nv_procfs_open_exercise_error_forwarding,
+-    .write   = nv_procfs_write_file,
+-    .release = nv_procfs_close_exercise_error_forwarding,
++static NV_PROC_FOPS nv_procfs_exercise_error_forwarding_fops = {
++    .proc_open    = nv_procfs_open_exercise_error_forwarding,
++    .proc_write   = nv_procfs_write_file,
++    .proc_release = nv_procfs_close_exercise_error_forwarding,
+ };
+ 
+ static int
+@@ -672,13 +670,12 @@
+     return rc;
+ }
+ 
+-static struct file_operations nv_procfs_unbind_lock_fops = {
+-    .owner   = THIS_MODULE,
+-    .open    = nv_procfs_open_unbind_lock,
+-    .read    = seq_read,
+-    .write   = nv_procfs_write_file,
+-    .llseek  = seq_lseek,
+-    .release = nv_procfs_close_unbind_lock,
++static NV_PROC_FOPS nv_procfs_unbind_lock_fops = {
++    .proc_open    = nv_procfs_open_unbind_lock,
++    .proc_read    = seq_read,
++    .proc_write   = nv_procfs_write_file,
++    .proc_lseek   = seq_lseek,
++    .proc_release = nv_procfs_close_unbind_lock,
+ };
+ 
+ static const char*
+@@ -987,21 +984,19 @@
+     return retval;
+ }
+ 
+-static const struct file_operations nv_procfs_numa_status_fops = {
+-    .owner   = THIS_MODULE,
+-    .open    = nv_procfs_open_numa_status,
+-    .read    = seq_read,
+-    .write   = nv_procfs_write_file,
+-    .llseek  = seq_lseek,
+-    .release = nv_procfs_close_numa_status,
++static const NV_PROC_FOPS nv_procfs_numa_status_fops = {
++    .proc_open    = nv_procfs_open_numa_status,
++    .proc_read    = seq_read,
++    .proc_write   = nv_procfs_write_file,
++    .proc_lseek   = seq_lseek,
++    .proc_release = nv_procfs_close_numa_status,
+ };
+ 
+-static const struct file_operations nv_procfs_offline_pages_fops = {
+-    .owner   = THIS_MODULE,
+-    .open    = nv_procfs_open_offline_pages,
+-    .read    = seq_read,
+-    .llseek  = seq_lseek,
+-    .release = nv_procfs_close_offline_pages,
++static const NV_PROC_FOPS nv_procfs_offline_pages_fops = {
++    .proc_open    = nv_procfs_open_offline_pages,
++    .proc_read    = seq_read,
++    .proc_lseek   = seq_lseek,
++    .proc_release = nv_procfs_close_offline_pages,
+ };
+ 
+ static int
+diff -ruN --no-dereference a/nvidia/nv-vm.c b/nvidia/nv-vm.c
+--- a/nvidia/nv-vm.c	2026-06-15 01:29:47.766033078 +0800
++++ b/nvidia/nv-vm.c	2026-06-15 01:29:47.767162454 +0800
+@@ -74,7 +74,7 @@
+ }
+ 
+ static inline void nv_set_memory_array_type(
+-    unsigned long *pages,
++    struct page **pages,
+     NvU32 num_pages,
+     NvU32 type
+ )
+@@ -83,10 +83,10 @@
+     {
+ #if defined(NV_SET_MEMORY_ARRAY_UC_PRESENT)
+         case NV_MEMORY_UNCACHED:
+-            set_memory_array_uc(pages, num_pages);
++            set_pages_array_uc(pages, num_pages);
+             break;
+         case NV_MEMORY_WRITEBACK:
+-            set_memory_array_wb(pages, num_pages);
++            set_pages_array_wb(pages, num_pages);
+             break;
+ #endif
+         default:
+@@ -125,7 +125,7 @@
+ {
+     NvU32 i;
+     NV_STATUS status;
+-    unsigned long *pages;
++    struct page **pages;
+     nvidia_pte_t *page_ptr;
+     struct page *page;
+ 
+@@ -136,7 +136,7 @@
+         if (nv_set_memory_array_type_present(type))
+         {
+             status = os_alloc_mem((void **)&pages,
+-                        at->num_pages * sizeof(unsigned long));
++                        at->num_pages * sizeof(struct page *));
+             if (status != NV_OK)
+                 pages = NULL;
+         }
+@@ -147,7 +147,7 @@
+             {
+                 page_ptr = at->page_table[i];
+                 page = NV_GET_PAGE_STRUCT(page_ptr->phys_addr);
+-                pages[i] = (unsigned long)page_address(page);
++                pages[i] = page;
+             }
+             nv_set_memory_array_type(pages, at->num_pages, type);
+             os_free_mem(pages);
+diff -ruN --no-dereference a/nvidia/os-interface.c b/nvidia/os-interface.c
+--- a/nvidia/os-interface.c	2026-06-15 01:29:48.005492778 +0800
++++ b/nvidia/os-interface.c	2026-06-15 01:29:48.006502841 +0800
+@@ -16,6 +16,10 @@
+ 
+ #include "nv-time.h"
+ 
++#include <linux/screen_info.h>
++
++extern struct screen_info screen_info;
++
+ #define MAX_ERROR_STRING 512
+ static char nv_error_string[MAX_ERROR_STRING];
+ nv_spinlock_t nv_error_string_lock;
+@@ -194,7 +198,7 @@
+ 
+ BOOL NV_API_CALL os_is_isr(void)
+ {
+-    return (in_irq());
++    return (!in_task());
+ }
+ 
+ // return TRUE if the caller is the super-user
+@@ -429,12 +433,12 @@
+     NvU32 *useconds
+ )
+ {
+-    struct timeval tm;
++    struct timespec64 tm;
+ 
+     nv_gettimeofday(&tm);
+ 
+     *seconds = tm.tv_sec;
+-    *useconds = tm.tv_usec;
++    *useconds = tm.tv_nsec / 1000;
+ 
+     return NV_OK;
+ }
+@@ -443,9 +447,9 @@
+ 
+ void NV_API_CALL os_get_current_tick(NvU64 *nseconds)
+ {
+-    struct timespec ts;
++    struct timespec64 ts;
+ 
+-    jiffies_to_timespec(jiffies, &ts);
++    jiffies_to_timespec64(jiffies, &ts);
+ 
+     *nseconds = ((NvU64)ts.tv_sec * NSEC_PER_SEC + (NvU64)ts.tv_nsec);
+ }
+@@ -515,12 +519,12 @@
+     unsigned long usec;
+ 
+ #ifdef NV_CHECK_DELAY_ACCURACY
+-    struct timeval tm1, tm2;
++    struct timespec64 tm1, tm2;
+ 
+     nv_gettimeofday(&tm1);
+ #endif
+ 
+-    if (in_irq() && (MicroSeconds > NV_MAX_ISR_DELAY_US))
++    if (!in_task() && (MicroSeconds > NV_MAX_ISR_DELAY_US))
+         return NV_ERR_GENERIC;
+ 
+     mdelay_safe_msec = MicroSeconds / 1000;
+@@ -555,9 +559,9 @@
+     unsigned long MicroSeconds;
+     unsigned long jiffies;
+     unsigned long mdelay_safe_msec;
+-    struct timeval tm_end, tm_aux;
++    struct timespec64 tm_end, tm_aux;
+ #ifdef NV_CHECK_DELAY_ACCURACY
+-    struct timeval tm_start;
++    struct timespec64 tm_start;
+ #endif
+ 
+     nv_gettimeofday(&tm_aux);
+@@ -565,7 +569,7 @@
+     tm_start = tm_aux;
+ #endif
+ 
+-    if (in_irq() && (MilliSeconds > NV_MAX_ISR_DELAY_MS))
++    if (!in_task() && (MilliSeconds > NV_MAX_ISR_DELAY_MS))
+         return NV_ERR_GENERIC;
+ 
+     if (!NV_MAY_SLEEP())
+@@ -575,7 +579,7 @@
+     }
+ 
+     MicroSeconds = MilliSeconds * 1000;
+-    tm_end.tv_usec = MicroSeconds;
++    tm_end.tv_nsec = MicroSeconds * 1000;
+     tm_end.tv_sec = 0;
+     NV_TIMERADD(&tm_aux, &tm_end, &tm_end);
+ 
+@@ -590,7 +594,7 @@
+         // the requested timeout has expired, loop until less
+         // than a jiffie of the desired delay remains.
+         //
+-        current->state = TASK_INTERRUPTIBLE;
++        current->__state = TASK_INTERRUPTIBLE;
+         do
+         {
+             schedule_timeout(jiffies);
+@@ -598,7 +602,7 @@
+             if (NV_TIMERCMP(&tm_aux, &tm_end, <))
+             {
+                 NV_TIMERSUB(&tm_end, &tm_aux, &tm_aux);
+-                MicroSeconds = tm_aux.tv_usec + tm_aux.tv_sec * 1000000;
++                MicroSeconds = tm_aux.tv_sec * 1000000 + tm_aux.tv_nsec / 1000;
+             }
+             else
+                 MicroSeconds = 0;
+@@ -619,7 +623,7 @@
+     nv_gettimeofday(&tm_aux);
+     timersub(&tm_aux, &tm_start, &tm_aux);
+     nv_printf(NV_DBG_ERRORS, "NVRM: osDelay %dmsec: %d.%06dsec\n",
+-        MilliSeconds, tm_aux.tv_sec, tm_aux.tv_usec);
++        MilliSeconds, tm_aux.tv_sec, tm_aux.tv_nsec / 1000);
+ #endif
+ 
+     return NV_OK;
+@@ -1073,20 +1077,10 @@
+ 
+ void NV_API_CALL os_register_compatible_ioctl(NvU32 cmd, NvU32 size)
+ {
+-#if defined(NVCPU_X86_64) && defined(CONFIG_IA32_EMULATION) && \
+-  !defined(NV_FILE_OPERATIONS_HAS_COMPAT_IOCTL)
+-    unsigned int request = _IOWR(NV_IOCTL_MAGIC, cmd, char[size]);
+-    register_ioctl32_conversion(request, (void *)sys_ioctl);
+-#endif
+ }
+ 
+ void NV_API_CALL os_unregister_compatible_ioctl(NvU32 cmd, NvU32 size)
+ {
+-#if defined(NVCPU_X86_64) && defined(CONFIG_IA32_EMULATION) && \
+-  !defined(NV_FILE_OPERATIONS_HAS_COMPAT_IOCTL)
+-    unsigned int request = _IOWR(NV_IOCTL_MAGIC, cmd, char[size]);
+-    unregister_ioctl32_conversion(request);
+-#endif
+ }
+ 
+ BOOL NV_API_CALL os_pat_supported(void)
+@@ -1914,7 +1908,7 @@
+ {
+     struct ipmi_recv_msg    *rx_msg;
+     int                     err_no;
+-    struct timeval          tv;
++    struct timespec64          tv;
+     NvU64                   start_time;
+ 
+     nv_gettimeofday(&tv);
+diff -ruN --no-dereference a/nvidia-modeset/nvidia-modeset-linux.c b/nvidia-modeset/nvidia-modeset-linux.c
+--- a/nvidia-modeset/nvidia-modeset-linux.c	2026-06-15 01:29:48.126409347 +0800
++++ b/nvidia-modeset/nvidia-modeset-linux.c	2026-06-15 01:29:48.127961173 +0800
+@@ -216,11 +216,11 @@
+ 
+ NvU64 NVKMS_API_CALL nvkms_get_usec(void)
+ {
+-    struct timeval tv;
++    struct timespec64 tv;
+ 
+     nv_gettimeofday(&tv);
+ 
+-    return (((NvU64)tv.tv_sec) * 1000000) + tv.tv_usec;
++    return (((NvU64)tv.tv_sec) * 1000000) + tv.tv_nsec / 1000;
+ }
+ 
+ int NVKMS_API_CALL nvkms_copyin(void *kptr, NvU64 uaddr, size_t n)
+@@ -495,7 +495,7 @@
+      * pending timers and than waiting for workqueue callbacks.
+      */
+     if (timer->kernel_timer_created) {
+-        del_timer_sync(&timer->kernel_timer);
++        timer_delete_sync(&timer->kernel_timer);
+     }
+ 
+     down(&nvkms_lock);
+@@ -1266,7 +1266,7 @@
+              * completion, and we wait for queue completion with
+              * nv_kthread_q_stop below.
+              */
+-            if (del_timer_sync(&timer->kernel_timer) == 1) {
++            if (timer_delete_sync(&timer->kernel_timer) == 1) {
+                 /*  We've deactivated timer so we need to clean after it */
+                 list_del(&timer->timers_list);
+                 
+diff -ruN --no-dereference a/nvidia-uvm/nvidia-uvm.Kbuild b/nvidia-uvm/nvidia-uvm.Kbuild
+--- a/nvidia-uvm/nvidia-uvm.Kbuild	2026-06-15 01:29:49.574907113 +0800
++++ b/nvidia-uvm/nvidia-uvm.Kbuild	2026-06-15 01:29:49.576108747 +0800
+@@ -119,6 +119,7 @@
+ NV_CONFTEST_TYPE_COMPILE_TESTS += get_user_pages
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_has_address
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_present
++NV_CONFTEST_TYPE_COMPILE_TESTS += vm_fault_has_real_address
+ NV_CONFTEST_TYPE_COMPILE_TESTS += vm_ops_fault_removed_vma_arg
+ NV_CONFTEST_TYPE_COMPILE_TESTS += node_states_n_memory
+ NV_CONFTEST_TYPE_COMPILE_TESTS += kmem_cache_has_kobj_remove_work
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_api.h b/nvidia-uvm/uvm8_api.h
+--- a/nvidia-uvm/uvm8_api.h	2026-06-15 01:29:48.862938618 +0800
++++ b/nvidia-uvm/uvm8_api.h	2026-06-15 01:29:48.864081933 +0800
+@@ -111,7 +111,7 @@
+ // valid vmas. A vma is valid if the corresponding VM_SPECIAL flags are not
+ // set.
+ //
+-// Locking: current->mm->mmap_sem must be locked
++// Locking: current->mm->mmap_lock must be locked
+ bool uvm_is_valid_vma_range(NvU64 start, NvU64 length);
+ 
+ // Check that the interval [base, base + length) is fully covered by UVM
+@@ -119,7 +119,7 @@
+ // valid vmas (NV_WARN_NOTHING_TO_DO is returned). Any other input results on a
+ // return status of NV_ERR_INVALID_ADDRESS
+ //
+-// Locking: current->mm->mmap_sem must be locked
++// Locking: current->mm->mmap_lock must be locked
+ //          va_space->lock must be locked in shared or exclusive modes
+ NV_STATUS uvm_api_range_type_check(uvm_va_space_t *va_space, NvU64 base, NvU64 length);
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_ats_faults.h b/nvidia-uvm/uvm8_ats_faults.h
+--- a/nvidia-uvm/uvm8_ats_faults.h	2026-06-15 01:29:48.775857932 +0800
++++ b/nvidia-uvm/uvm8_ats_faults.h	2026-06-15 01:29:48.777153085 +0800
+@@ -39,7 +39,7 @@
+ static bool uvm_can_ats_service_faults(uvm_gpu_va_space_t *gpu_va_space, struct mm_struct *mm)
+ {
+     if (mm)
+-        uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++        uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+     if (gpu_va_space->ats.enabled)
+         UVM_ASSERT(g_uvm_global.ats.enabled);
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_ats_ibm.c b/nvidia-uvm/uvm8_ats_ibm.c
+--- a/nvidia-uvm/uvm8_ats_ibm.c	2026-06-15 01:29:48.873463996 +0800
++++ b/nvidia-uvm/uvm8_ats_ibm.c	2026-06-15 01:29:48.874749715 +0800
+@@ -389,7 +389,7 @@
+ 
+     UVM_ASSERT(g_uvm_global.ats.enabled);
+     UVM_ASSERT(uvm_gpu_va_space_state(gpu_va_space) == UVM_GPU_VA_SPACE_STATE_ACTIVE);
+-    uvm_assert_mmap_sem_locked_write(&current->mm->mmap_sem);
++    uvm_assert_mmap_sem_locked_write(&current->mm->mmap_lock);
+     uvm_assert_rwsem_locked_write(&va_space->lock);
+ 
+     if (UVM_KERNEL_SUPPORTS_IBM_ATS()) {
+diff -ruN --no-dereference a/nvidia-uvm/uvm8.c b/nvidia-uvm/uvm8.c
+--- a/nvidia-uvm/uvm8.c	2026-06-15 01:29:49.320819993 +0800
++++ b/nvidia-uvm/uvm8.c	2026-06-15 01:29:49.322015047 +0800
+@@ -298,7 +298,7 @@
+     }
+ 
+     // At this point we are guaranteed that the mmap_sem is held in write mode.
+-    uvm_record_lock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_lock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     // Split vmas should always fall entirely within the old one, and be on one
+     // side.
+@@ -347,7 +347,7 @@
+ 
+ out:
+     uvm_va_space_up_write(va_space);
+-    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_lock);
+ }
+ 
+ static void uvm_vm_close_managed(struct vm_area_struct *vma)
+@@ -357,7 +357,7 @@
+     bool is_uvm_teardown = false;
+ 
+     if (current->mm != NULL)
+-        uvm_record_lock_mmap_sem_write(&current->mm->mmap_sem);
++        uvm_record_lock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     if (current->mm == NULL) {
+         // current->mm will be NULL on process teardown. In that case, we want
+@@ -387,7 +387,7 @@
+     uvm_va_space_up_write(va_space);
+ 
+     if (current->mm != NULL)
+-        uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
++        uvm_record_unlock_mmap_sem_write(&current->mm->mmap_lock);
+ }
+ 
+ static vm_fault_t uvm_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+@@ -415,7 +415,7 @@
+     // The mmap_sem might be held in write mode, but the mode doesn't matter for
+     // the purpose of lock ordering and we don't rely on it being in write
+     // anywhere so just record it as read mode in all cases.
+-    uvm_record_lock_mmap_sem_read(&vma->vm_mm->mmap_sem);
++    uvm_record_lock_mmap_sem_read(&vma->vm_mm->mmap_lock);
+ 
+     do {
+         bool do_sleep = false;
+@@ -475,7 +475,7 @@
+         uvm_gpu_retain_mask(&service_context->cpu_fault.gpus_to_check_for_ecc);
+ 
+     uvm_va_space_up_read(va_space);
+-    uvm_record_unlock_mmap_sem_read(&vma->vm_mm->mmap_sem);
++    uvm_record_unlock_mmap_sem_read(&vma->vm_mm->mmap_lock);
+ 
+     if (status == NV_OK) {
+         uvm_gpu_t *gpu;
+@@ -540,7 +540,7 @@
+     bool is_fork = (vma->vm_mm != origin_vma->vm_mm);
+     NV_STATUS status;
+ 
+-    uvm_record_lock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_lock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     uvm_va_space_down_write(va_space);
+ 
+@@ -578,7 +578,7 @@
+ 
+     uvm_va_space_up_write(va_space);
+ 
+-    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_lock);
+ }
+ 
+ // vm operations on semaphore pool allocations only control CPU mappings. Unmapping GPUs,
+@@ -588,7 +588,7 @@
+     uvm_va_space_t *va_space = uvm_va_space_get(vma->vm_file);
+ 
+     if (current->mm != NULL)
+-        uvm_record_lock_mmap_sem_write(&current->mm->mmap_sem);
++        uvm_record_lock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     uvm_va_space_down_read(va_space);
+ 
+@@ -597,7 +597,7 @@
+     uvm_va_space_up_read(va_space);
+ 
+     if (current->mm != NULL)
+-        uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
++        uvm_record_unlock_mmap_sem_write(&current->mm->mmap_lock);
+ }
+ 
+ static struct vm_operations_struct uvm_vm_ops_semaphore_pool =
+@@ -623,7 +623,7 @@
+     if (status != NV_OK)
+         return -nv_status_to_errno(status);
+ 
+-    uvm_record_lock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_lock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     // UVM mappings are required to set offset == VA. This simplifies things
+     // since we don't have to worry about address aliasing (except for fork,
+@@ -656,7 +656,7 @@
+     // Using VM_DONTCOPY would be nice, but madvise(MADV_DOFORK) can reset that
+     // so we have to handle vm_open on fork anyway. We could disable MADV_DOFORK
+     // with VM_IO, but that causes other mapping issues.
+-    vma->vm_flags |= VM_MIXEDMAP | VM_DONTEXPAND;
++    vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND);
+ 
+     vma->vm_ops = &uvm_vm_ops_managed;
+ 
+@@ -709,7 +709,7 @@
+     if (ret != 0 && vma_wrapper_allocated)
+         uvm_vma_wrapper_destroy(vma->vm_private_data);
+ 
+-    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
++    uvm_record_unlock_mmap_sem_write(&current->mm->mmap_lock);
+ 
+     return ret;
+ }
+@@ -850,7 +850,7 @@
+     if ((params->flags & ~UVM_INIT_FLAGS_MASK))
+         return NV_ERR_INVALID_ARGUMENT;
+ 
+-    uvm_down_write_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_write_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     if (va_space->initialized) {
+@@ -867,7 +867,7 @@
+     }
+ 
+     uvm_va_space_up_write(va_space);
+-    uvm_up_write_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_write_mmap_sem(&current->mm->mmap_lock);
+ 
+     return status;
+ }
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_gpu_access_counters.c b/nvidia-uvm/uvm8_gpu_access_counters.c
+--- a/nvidia-uvm/uvm8_gpu_access_counters.c	2026-06-15 01:29:50.319869825 +0800
++++ b/nvidia-uvm/uvm8_gpu_access_counters.c	2026-06-15 01:29:50.320945753 +0800
+@@ -1180,7 +1180,7 @@
+         // in order to lock it before locking the VA space.
+         va_space_mm = uvm_va_space_mm_retain(va_space);
+         if (va_space_mm)
+-            uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++            uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+ 
+         // Re-check that the VA block is valid after taking the VA space lock
+         uvm_va_space_down_read(va_space);
+@@ -1222,7 +1222,7 @@
+         uvm_va_space_up_read(va_space);
+ 
+     if (va_space_mm) {
+-        uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++        uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+         uvm_va_space_mm_release(va_space_mm);
+     }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_gpu.c b/nvidia-uvm/uvm8_gpu.c
+--- a/nvidia-uvm/uvm8_gpu.c	2026-06-15 01:29:49.010143245 +0800
++++ b/nvidia-uvm/uvm8_gpu.c	2026-06-15 01:29:49.011308703 +0800
+@@ -2333,15 +2333,15 @@
+ 
+ NV_STATUS uvm_gpu_map_cpu_pages(uvm_gpu_t *gpu, struct page *page, size_t size, NvU64 *dma_addr_out)
+ {
+-    NvU64 dma_addr = pci_map_page(gpu->pci_dev, page, 0, size, PCI_DMA_BIDIRECTIONAL);
++    NvU64 dma_addr = dma_map_page(&gpu->pci_dev->dev, page, 0, size, DMA_BIDIRECTIONAL);
+ 
+     UVM_ASSERT(PAGE_ALIGNED(size));
+ 
+-    if (NV_PCI_DMA_MAPPING_ERROR(gpu->pci_dev, dma_addr))
++    if (dma_mapping_error(&gpu->pci_dev->dev, dma_addr))
+         return NV_ERR_OPERATING_SYSTEM;
+ 
+     if (dma_addr < gpu->dma_addressable_start || dma_addr + size - 1 > gpu->dma_addressable_limit) {
+-        pci_unmap_page(gpu->pci_dev, dma_addr, size, PCI_DMA_BIDIRECTIONAL);
++        dma_unmap_page(&gpu->pci_dev->dev, dma_addr, size, DMA_BIDIRECTIONAL);
+         UVM_ERR_PRINT_RL("PCI mapped range [0x%llx, 0x%llx) not in the addressable range [0x%llx, 0x%llx), GPU %s\n",
+                          dma_addr,
+                          dma_addr + (NvU64)size,
+@@ -2375,7 +2375,7 @@
+     if (gpu->npu_dev)
+         dma_address = nv_expand_nvlink_addr(dma_address);
+     dma_address += gpu->dma_addressable_start;
+-    pci_unmap_page(gpu->pci_dev, dma_address, size, PCI_DMA_BIDIRECTIONAL);
++    dma_unmap_page(&gpu->pci_dev->dev, dma_address, size, DMA_BIDIRECTIONAL);
+     atomic64_sub(size, &gpu->mapped_cpu_pages_size);
+ }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_gpu_non_replayable_faults.c b/nvidia-uvm/uvm8_gpu_non_replayable_faults.c
+--- a/nvidia-uvm/uvm8_gpu_non_replayable_faults.c	2026-06-15 01:29:49.505353361 +0800
++++ b/nvidia-uvm/uvm8_gpu_non_replayable_faults.c	2026-06-15 01:29:49.506743748 +0800
+@@ -503,7 +503,7 @@
+     // TODO: Bug 1867098: Taking mmap_sem here may deadlock between RM
+     // and UVM.
+     if (va_space_mm)
+-        uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++        uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+ 
+     uvm_va_space_down_read(va_space);
+ 
+@@ -554,7 +554,7 @@
+ exit_no_channel:
+     uvm_va_space_up_read(va_space);
+     if (va_space_mm) {
+-        uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++        uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+         uvm_va_space_mm_release(va_space_mm);
+     }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_gpu_replayable_faults.c b/nvidia-uvm/uvm8_gpu_replayable_faults.c
+--- a/nvidia-uvm/uvm8_gpu_replayable_faults.c	2026-06-15 01:29:50.384866758 +0800
++++ b/nvidia-uvm/uvm8_gpu_replayable_faults.c	2026-06-15 01:29:50.385999022 +0800
+@@ -1430,7 +1430,7 @@
+ 
+                 uvm_va_space_up_read(va_space);
+                 if (va_space_mm) {
+-                    uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++                    uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+                     uvm_va_space_mm_release(va_space_mm);
+                     va_space_mm = NULL;
+                 }
+@@ -1449,7 +1449,7 @@
+             // TODO: Bug 1867098: Taking mmap_sem here may deadlock between RM
+             // and UVM.
+             if (va_space_mm)
+-                uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++                uvm_down_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+ 
+             uvm_va_space_down_read(va_space);
+ 
+@@ -1555,7 +1555,7 @@
+     if (va_space != NULL) {
+         uvm_va_space_up_read(va_space);
+         if (va_space_mm) {
+-            uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_sem);
++            uvm_up_read_mmap_sem(&va_space_mm->mm->mmap_lock);
+             uvm_va_space_mm_release(va_space_mm);
+         }
+     }
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_hmm.c b/nvidia-uvm/uvm8_hmm.c
+--- a/nvidia-uvm/uvm8_hmm.c	2026-06-15 01:29:49.704014840 +0800
++++ b/nvidia-uvm/uvm8_hmm.c	2026-06-15 01:29:49.705253234 +0800
+@@ -124,7 +124,7 @@
+     if (!uvm_hmm_is_enabled(va_space))
+         return NV_OK;
+ 
+-    uvm_assert_mmap_sem_locked_write(&current->mm->mmap_sem);
++    uvm_assert_mmap_sem_locked_write(&current->mm->mmap_lock);
+     uvm_assert_rwsem_locked_write(&va_space->lock);
+ 
+     va_space->hmm_va_space.mirror.ops = &mirror_ops;
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_lock.h b/nvidia-uvm/uvm8_lock.h
+--- a/nvidia-uvm/uvm8_lock.h	2026-06-15 01:29:50.172268628 +0800
++++ b/nvidia-uvm/uvm8_lock.h	2026-06-15 01:29:50.173321902 +0800
+@@ -125,12 +125,12 @@
+ //
+ //      We need to hold mmap_sem when calling vm_insert_page, which means that
+ //      any time an operation (such as an ioctl) might need to install a CPU
+-//      mapping, it must take current->mm->mmap_sem in read mode very early on.
++//      mapping, it must take current->mm->mmap_lock in read mode very early on.
+ //
+ //      However, current->mm is not necessarily the owning mm of the UVM vma.
+ //      fork or fd passing via a UNIX doman socket can cause that. Notably, this
+ //      is also the case when handling GPU faults from a kernel thread. This
+-//      means we must lock current->mm->mmap_sem, then look up the UVM vma and
++//      means we must lock current->mm->mmap_lock, then look up the UVM vma and
+ //      compare its mm before operating on that vma.
+ //
+ //      With HMM and ATS, the GPU fault handler takes mmap_sem. GPU faults may
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_mem.c b/nvidia-uvm/uvm8_mem.c
+--- a/nvidia-uvm/uvm8_mem.c	2026-06-15 01:29:49.436363606 +0800
++++ b/nvidia-uvm/uvm8_mem.c	2026-06-15 01:29:49.437923705 +0800
+@@ -481,7 +481,7 @@
+ 
+     UVM_ASSERT(uvm_mem_is_sysmem(mem));
+     UVM_ASSERT(mem->is_user_allocation);
+-    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_lock);
+ 
+     // TODO: Bug 1995015: high-order page allocations need to be allocated as
+     // compound pages in order to be able to use vm_insert_page on them. This
+@@ -505,7 +505,7 @@
+     size_t num_chunk_pages = mem->chunk_size / PAGE_SIZE;
+ 
+     UVM_ASSERT(mem->is_user_allocation);
+-    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_lock);
+     UVM_ASSERT(!uvm_mem_is_sysmem(mem));
+     UVM_ASSERT(mem->backing_gpu != NULL);
+     UVM_ASSERT(mem->backing_gpu->numa_info.enabled);
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_migrate.c b/nvidia-uvm/uvm8_migrate.c
+--- a/nvidia-uvm/uvm8_migrate.c	2026-06-15 01:29:49.226028181 +0800
++++ b/nvidia-uvm/uvm8_migrate.c	2026-06-15 01:29:49.227038854 +0800
+@@ -597,7 +597,7 @@
+     bool is_single_block;
+     bool should_do_cpu_preunmap;
+ 
+-    uvm_assert_mmap_sem_locked(&current->mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&current->mm->mmap_lock);
+     uvm_assert_rwsem_locked(&va_space->lock);
+ 
+     if (!first_va_range || first_va_range->type != UVM_VA_RANGE_TYPE_MANAGED)
+@@ -854,7 +854,7 @@
+     }
+ 
+     // mmap_sem will be needed if we have to create CPU mappings
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     if (!is_async) {
+@@ -936,7 +936,7 @@
+     //       benchmarks to see if a two-pass approach would be faster (first
+     //       pass pushes all GPU work asynchronously, second pass updates CPU
+     //       mappings synchronously).
+-    uvm_up_read_mmap_sem_out_of_order(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem_out_of_order(&current->mm->mmap_lock);
+ 
+     if (tracker_ptr) {
+         if (params->semaphoreAddress && status == NV_OK) {
+@@ -982,7 +982,7 @@
+     uvm_gpu_t *gpu = NULL;
+ 
+     // mmap_sem will be needed if we have to create CPU mappings
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     if (uvm_uuid_is_cpu(&params->destinationUuid)) {
+@@ -1027,7 +1027,7 @@
+     //       benchmarks to see if a two-pass approach would be faster (first
+     //       pass pushes all GPU work asynchronously, second pass updates CPU
+     //       mappings synchronously).
+-    uvm_up_read_mmap_sem_out_of_order(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem_out_of_order(&current->mm->mmap_lock);
+ 
+     tracker_status = uvm_tracker_wait_deinit(&local_tracker);
+     uvm_va_space_up_read(va_space);
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_migrate_pageable.c b/nvidia-uvm/uvm8_migrate_pageable.c
+--- a/nvidia-uvm/uvm8_migrate_pageable.c	2026-06-15 01:29:49.805980672 +0800
++++ b/nvidia-uvm/uvm8_migrate_pageable.c	2026-06-15 01:29:49.807157281 +0800
+@@ -753,7 +753,7 @@
+     UVM_ASSERT(start >= vma->vm_start);
+     UVM_ASSERT(outer <= vma->vm_end);
+     UVM_ASSERT(outer - start <= UVM_MIGRATE_VMA_MAX_SIZE);
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+     uvm_assert_rwsem_locked(&migrate_vma_state->va_space->lock);
+ 
+     ret = migrate_vma(&g_migrate_vma_ops,
+@@ -827,7 +827,7 @@
+     UVM_ASSERT(PAGE_ALIGNED(outer));
+     UVM_ASSERT(vma->vm_end > start);
+     UVM_ASSERT(vma->vm_start < outer);
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+     uvm_assert_rwsem_locked(&va_space->lock);
+ 
+     // Adjust to input range boundaries
+@@ -879,7 +879,7 @@
+ 
+     UVM_ASSERT(PAGE_ALIGNED(start));
+     UVM_ASSERT(PAGE_ALIGNED(length));
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+ 
+     vma = find_vma_intersection(mm, start, outer);
+ 
+@@ -941,7 +941,7 @@
+ 
+     UVM_ASSERT(PAGE_ALIGNED(start));
+     UVM_ASSERT(PAGE_ALIGNED(length));
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+ 
+     // We only check that dst_cpu_node_id is a valid node in the system and it
+     // doesn't correspond to a GPU node. This is fine because alloc_pages_node
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_policy.c b/nvidia-uvm/uvm8_policy.c
+--- a/nvidia-uvm/uvm8_policy.c	2026-06-15 01:29:50.026036717 +0800
++++ b/nvidia-uvm/uvm8_policy.c	2026-06-15 01:29:50.027133429 +0800
+@@ -33,13 +33,13 @@
+ // by valid vmas. A vma is valid if the corresponding VM_SPECIAL flags are not
+ // set
+ //
+-// Locking: current->mm->mmap_sem must be locked
++// Locking: current->mm->mmap_lock must be locked
+ bool uvm_is_valid_vma_range(NvU64 start, NvU64 length)
+ {
+     const NvU64 end = start + length;
+     struct vm_area_struct *vma;
+ 
+-    uvm_assert_mmap_sem_locked(&current->mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&current->mm->mmap_lock);
+ 
+     vma = find_vma_intersection(current->mm, start, end);
+ 
+@@ -47,7 +47,7 @@
+         if (vma->vm_end >= end)
+             return true;
+         start = vma->vm_end;
+-        vma = vma->vm_next;
++        vma = find_vma_intersection(current->mm, start, end);
+     }
+ 
+     return false;
+@@ -232,7 +232,7 @@
+ 
+     UVM_ASSERT(va_space);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+     has_va_space_write_lock = true;
+ 
+@@ -305,7 +305,7 @@
+         uvm_va_space_up_write(va_space);
+     else
+         uvm_va_space_up_read(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     return status == NV_OK ? tracker_status : status;
+ }
+@@ -317,7 +317,7 @@
+ 
+     UVM_ASSERT(va_space);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     status = uvm_api_range_type_check(va_space, params->requestedBase, params->length);
+@@ -328,7 +328,7 @@
+         status = NV_OK;
+ 
+     uvm_va_space_up_write(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     return status;
+ }
+ 
+@@ -409,7 +409,7 @@
+ 
+     UVM_ASSERT(va_space);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     status = uvm_api_range_type_check(va_space, base, length);
+@@ -473,7 +473,7 @@
+ 
+ done:
+     uvm_va_space_up_write(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     return status;
+ }
+@@ -656,7 +656,7 @@
+     UVM_ASSERT(va_space);
+ 
+     // We need mmap_sem as we may create CPU mappings
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     status = uvm_api_range_type_check(va_space, base, length);
+@@ -710,7 +710,7 @@
+ 
+ done:
+     uvm_va_space_up_write(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     return status;
+ }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_populate_pageable.c b/nvidia-uvm/uvm8_populate_pageable.c
+--- a/nvidia-uvm/uvm8_populate_pageable.c	2026-06-15 01:29:48.609528657 +0800
++++ b/nvidia-uvm/uvm8_populate_pageable.c	2026-06-15 01:29:48.610602769 +0800
+@@ -49,7 +49,7 @@
+     UVM_ASSERT(PAGE_ALIGNED(outer));
+     UVM_ASSERT(vma->vm_end > start);
+     UVM_ASSERT(vma->vm_start < outer);
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+ 
+     if (!min_prot_ok)
+         return NV_ERR_INVALID_ADDRESS;
+@@ -67,12 +67,12 @@
+     // page fault handler. The page fault is caused by get_user_pages.
+     uvm_managed_vma = uvm_file_is_nvidia_uvm(vma->vm_file);
+     if (uvm_managed_vma)
+-        uvm_record_unlock_mmap_sem_read(&mm->mmap_sem);
++        uvm_record_unlock_mmap_sem_read(&mm->mmap_lock);
+ 
+     ret = NV_GET_USER_PAGES(start, vma_num_pages, is_writable, 0, NULL, NULL);
+ 
+     if (uvm_managed_vma)
+-        uvm_record_lock_mmap_sem_read(&mm->mmap_sem);
++        uvm_record_lock_mmap_sem_read(&mm->mmap_lock);
+ 
+     if (ret < 0)
+         return errno_to_nv_status(ret);
+@@ -95,14 +95,14 @@
+ 
+     UVM_ASSERT(PAGE_ALIGNED(start));
+     UVM_ASSERT(PAGE_ALIGNED(length));
+-    uvm_assert_mmap_sem_locked(&mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&mm->mmap_lock);
+ 
+     vma = find_vma_intersection(mm, start, outer);
+ 
+     // VMAs are validated and populated one at a time, since they may have
+     // different protection flags
+     // Validation of VM_SPECIAL flags is delegated to get_user_pages
+-    for (; vma && (vma->vm_start <= prev_outer); vma = vma->vm_next) {
++    for (; vma && (vma->vm_start <= prev_outer); ) {
+         NV_STATUS status = uvm_populate_pageable_vma(vma, start, outer - start, min_prot);
+ 
+         if (status != NV_OK)
+@@ -112,6 +112,7 @@
+             return NV_OK;
+ 
+         prev_outer = vma->vm_end;
++        vma = find_vma_intersection(mm, vma->vm_end, outer);
+     }
+ 
+     // Input range not fully covered by VMAs.
+@@ -156,14 +157,14 @@
+ 
+     // mmap_sem is needed to traverse the vmas in the input range and call into
+     // get_user_pages
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     if (allow_managed || uvm_va_space_range_empty(va_space, params->base, params->base + params->length - 1))
+         status = uvm_populate_pageable(current->mm, params->base, params->length, min_prot);
+     else
+         status = NV_ERR_INVALID_ADDRESS;
+ 
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     return status;
+ }
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_populate_pageable.h b/nvidia-uvm/uvm8_populate_pageable.h
+--- a/nvidia-uvm/uvm8_populate_pageable.h	2026-06-15 01:29:48.806909985 +0800
++++ b/nvidia-uvm/uvm8_populate_pageable.h	2026-06-15 01:29:48.808063546 +0800
+@@ -28,7 +28,7 @@
+ // [start:start+length) range. If any of the pages was not populated, we return
+ // NV_ERR_NO_MEMORY.
+ //
+-// Locking: vma->vm_mm->mmap_sem must be held in read or write mode
++// Locking: vma->vm_mm->mmap_lock must be held in read or write mode
+ NV_STATUS uvm_populate_pageable_vma(struct vm_area_struct *vma,
+                                     unsigned long start,
+                                     unsigned long length,
+@@ -38,7 +38,7 @@
+ // range must be fully backed by vmas. If any of the pages was not populated,
+ // we return NV_ERR_NO_MEMORY.
+ //
+-// Locking: mm->mmap_sem must be held in read or write mode
++// Locking: mm->mmap_lock must be held in read or write mode
+ NV_STATUS uvm_populate_pageable(struct mm_struct *mm,
+                                 unsigned long start,
+                                 unsigned long length,
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_tools.c b/nvidia-uvm/uvm8_tools.c
+--- a/nvidia-uvm/uvm8_tools.c	2026-06-15 01:29:50.007036282 +0800
++++ b/nvidia-uvm/uvm8_tools.c	2026-06-15 01:29:50.008334767 +0800
+@@ -255,9 +255,9 @@
+         goto fail;
+     }
+ 
+-    down_read(&current->mm->mmap_sem);
++    down_read(&current->mm->mmap_lock);
+     ret = NV_GET_USER_PAGES(user_va, num_pages, 1, 0, *pages, vmas);
+-    up_read(&current->mm->mmap_sem);
++    up_read(&current->mm->mmap_lock);
+     if (ret != num_pages) {
+         status = NV_ERR_INVALID_ARGUMENT;
+         goto fail;
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_block.c b/nvidia-uvm/uvm8_va_block.c
+--- a/nvidia-uvm/uvm8_va_block.c	2026-06-15 01:29:49.387962641 +0800
++++ b/nvidia-uvm/uvm8_va_block.c	2026-06-15 01:29:49.389440227 +0800
+@@ -6417,7 +6417,7 @@
+     // us, so we can safely operate on the vma but we can't use
+     // uvm_va_range_vma_current.
+     vma = uvm_va_range_vma(va_range);
+-    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_lock);
+ 
+     // Add the mapping
+     addr = uvm_va_block_cpu_page_address(block, page_index);
+@@ -9860,7 +9860,7 @@
+     // thinking they each owned the page.
+     //
+     // This function must only be called when it's safe to call vm_insert_page.
+-    // That is, there's a reference held on the vma's vm_mm and vm_mm->mmap_sem
++    // That is, there's a reference held on the vma's vm_mm and vm_mm->mmap_lock
+     // is held in at least read mode, but current->mm might not be vma->vm_mm.
+     status = UVM_VA_BLOCK_LOCK_RETRY(va_block,
+                                      &va_block_retry,
+@@ -10479,7 +10479,7 @@
+ 
+     // mmap_sem isn't needed for invalidating CPU mappings, but it will be
+     // needed for inserting them.
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     if (uvm_uuid_is_cpu(&params->uuid)) {
+@@ -10562,7 +10562,7 @@
+ 
+ out:
+     uvm_va_space_up_read(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     uvm_va_block_context_free(block_context);
+ 
+@@ -10577,7 +10577,7 @@
+ 
+     BUILD_BUG_ON(UVM_TEST_VA_BLOCK_SIZE != UVM_VA_BLOCK_SIZE);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     status = uvm_va_block_find(va_space, params->lookup_address, &va_block);
+@@ -10595,7 +10595,7 @@
+ 
+ out:
+     uvm_va_space_up_read(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     return status;
+ }
+ 
+@@ -10611,7 +10611,7 @@
+     unsigned release_block_count = 0;
+     NvU64 addr = UVM_ALIGN_DOWN(params->lookup_address, PAGE_SIZE);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     status = uvm_va_block_find(va_space, addr, &block);
+@@ -10736,7 +10736,7 @@
+             uvm_va_block_release(block);
+     }
+     uvm_va_space_up_read(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     return status;
+ }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_block.h b/nvidia-uvm/uvm8_va_block.h
+--- a/nvidia-uvm/uvm8_va_block.h	2026-06-15 01:29:48.600439878 +0800
++++ b/nvidia-uvm/uvm8_va_block.h	2026-06-15 01:29:48.601652431 +0800
+@@ -960,8 +960,8 @@
+ // etc.).
+ //
+ // Locking:
+-//  - vma->vm_mm->mmap_sem must be held in at least read mode. Note, that might
+-//    not be the same as current->mm->mmap_sem.
++//  - vma->vm_mm->mmap_lock must be held in at least read mode. Note, that might
++//    not be the same as current->mm->mmap_lock.
+ //  - va_space lock must be held in at least read mode
+ //
+ // service_context->block_context.mm is ignored and vma->vm_mm is used instead.
+@@ -979,8 +979,8 @@
+ // context
+ //
+ // Locking:
+-//  - vma->vm_mm->mmap_sem must be held in at least read mode. Note, that might
+-//    not be the same as current->mm->mmap_sem. (only if processor_id == UVM_CPU_ID)
++//  - vma->vm_mm->mmap_lock must be held in at least read mode. Note, that might
++//    not be the same as current->mm->mmap_lock. (only if processor_id == UVM_CPU_ID)
+ //  - va_space lock must be held in at least read mode
+ //  - va_block lock must be held
+ //
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_block_types.h b/nvidia-uvm/uvm8_va_block_types.h
+--- a/nvidia-uvm/uvm8_va_block_types.h	2026-06-15 01:29:49.447075418 +0800
++++ b/nvidia-uvm/uvm8_va_block_types.h	2026-06-15 01:29:49.448271719 +0800
+@@ -249,7 +249,7 @@
+     //
+     // 1) The mm will be valid (reference held) for the duration of the
+     //    block operation.
+-    // 2) mm->mmap_sem is held in at least read mode.
++    // 2) mm->mmap_lock is held in at least read mode.
+     //
+     // If this is NULL, the block operation skips anything which would require
+     // the mm, such as creating CPU mappings.
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_range.c b/nvidia-uvm/uvm8_va_range.c
+--- a/nvidia-uvm/uvm8_va_range.c	2026-06-15 01:29:48.551427647 +0800
++++ b/nvidia-uvm/uvm8_va_range.c	2026-06-15 01:29:48.552910048 +0800
+@@ -1597,7 +1597,7 @@
+         // GPU faults only check vma permissions if uvm_enable_builtin_tests is
+         // set, because the Linux kernel can change vm_flags at any moment (for
+         // example on mprotect) and here we are not guaranteed to have
+-        // vma->vm_mm->mmap_sem. During tests we ensure that this scenario does
++        // vma->vm_mm->mmap_lock. During tests we ensure that this scenario does
+         // not happen
+         //
+         // TODO: Bug 1896799: On HMM/ATS we could look up the mm here and do
+@@ -1763,7 +1763,7 @@
+ 
+     va_space = uvm_va_space_get(filp);
+ 
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_read(va_space);
+ 
+     va_range = uvm_va_range_find(va_space, params->lookup_address);
+@@ -1824,7 +1824,7 @@
+ 
+ out:
+     uvm_va_space_up_read(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     return status;
+ }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_range.h b/nvidia-uvm/uvm8_va_range.h
+--- a/nvidia-uvm/uvm8_va_range.h	2026-06-15 01:29:49.417354295 +0800
++++ b/nvidia-uvm/uvm8_va_range.h	2026-06-15 01:29:49.418347990 +0800
+@@ -629,7 +629,7 @@
+ 
+ // Check that the VA range's vma is safe to use under mm. If not, NULL is
+ // returned. If the vma is returned, there must be a reference on mm and
+-// mm->mmap_sem must be held.
++// mm->mmap_lock must be held.
+ static struct vm_area_struct *uvm_va_range_vma_check(uvm_va_range_t *va_range, struct mm_struct *mm)
+ {
+     struct vm_area_struct *vma;
+@@ -676,7 +676,7 @@
+     if (mm != vma->vm_mm)
+         return NULL;
+ 
+-    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_sem);
++    uvm_assert_mmap_sem_locked(&vma->vm_mm->mmap_lock);
+     return vma;
+ }
+ 
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_space.c b/nvidia-uvm/uvm8_va_space.c
+--- a/nvidia-uvm/uvm8_va_space.c	2026-06-15 01:29:50.193099093 +0800
++++ b/nvidia-uvm/uvm8_va_space.c	2026-06-15 01:29:50.194482473 +0800
+@@ -752,7 +752,7 @@
+ 
+     // The mmap_sem lock is needed to establish CPU mappings to any pages
+     // evicted from the GPU if accessed by CPU is set for them.
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     uvm_va_space_down_write(va_space);
+ 
+@@ -777,7 +777,7 @@
+     uvm_processor_mask_clear(&va_space->gpu_unregister_in_progress, gpu->id);
+ 
+     uvm_va_space_up_write(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+ 
+     uvm_deferred_free_object_list(&deferred_free_list);
+ 
+@@ -1246,7 +1246,7 @@
+     uvm_ats_ibm_mm_lock(ats_mm);
+     uvm_ats_ibm_register_lock(va_space);
+ 
+-    uvm_down_write_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_write_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     if (!uvm_processor_mask_test(&va_space->registered_gpus, gpu->id)) {
+@@ -1299,7 +1299,7 @@
+     }
+ 
+     uvm_va_space_up_write(va_space);
+-    uvm_up_write_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_write_mmap_sem(&current->mm->mmap_lock);
+     uvm_ats_ibm_register_unlock(va_space);
+     uvm_ats_ibm_mm_unlock(ats_mm);
+     uvm_gpu_release(gpu);
+@@ -1317,7 +1317,7 @@
+     }
+ 
+     uvm_va_space_up_write(va_space);
+-    uvm_up_write_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_write_mmap_sem(&current->mm->mmap_lock);
+     uvm_ats_ibm_register_unlock(va_space);
+ 
+ error_unlocked:
+@@ -1404,7 +1404,7 @@
+     uvm_va_space_up_read_rm(va_space);
+ 
+     uvm_ats_ibm_mm_lock(ats_mm);
+-    uvm_down_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_down_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_va_space_down_write(va_space);
+ 
+     // We dropped the lock so we have to re-verify that this gpu_va_space is
+@@ -1428,7 +1428,7 @@
+ 
+ done:
+     uvm_va_space_up_write(va_space);
+-    uvm_up_read_mmap_sem(&current->mm->mmap_sem);
++    uvm_up_read_mmap_sem(&current->mm->mmap_lock);
+     uvm_deferred_free_object_list(&deferred_free_list);
+ 
+     // The deferred free above will have called
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_space.h b/nvidia-uvm/uvm8_va_space.h
+--- a/nvidia-uvm/uvm8_va_space.h	2026-06-15 01:29:49.972857302 +0800
++++ b/nvidia-uvm/uvm8_va_space.h	2026-06-15 01:29:49.974266795 +0800
+@@ -123,7 +123,7 @@
+     // registered in the VA space to avoid leaving stale entries of the VA range
+     // that is going to be destroyed. Otherwise, these fault entries can be
+     // attributed to new VA ranges reallocated at the same addresses. However,
+-    // uvm_vm_close is called with mm->mmap_sem taken and we cannot take the ISR
++    // uvm_vm_close is called with mm->mmap_lock taken and we cannot take the ISR
+     // lock. Therefore, we use a flag no notify the GPU fault handler that the
+     // fault buffer needs to be flushed, before servicing the faults that belong
+     // to the va_space.
+diff -ruN --no-dereference a/nvidia-uvm/uvm8_va_space_mm.c b/nvidia-uvm/uvm8_va_space_mm.c
+--- a/nvidia-uvm/uvm8_va_space_mm.c	2026-06-15 01:29:49.020872782 +0800
++++ b/nvidia-uvm/uvm8_va_space_mm.c	2026-06-15 01:29:49.021942777 +0800
+@@ -533,9 +533,9 @@
+ 
+     UVM_ASSERT(IS_ALIGNED(addr, sizeof(val)));
+ 
+-    uvm_down_read_mmap_sem(&mm->mmap_sem);
+-    ret = NV_GET_USER_PAGES_REMOTE(NULL, mm, (unsigned long)addr, 1, write, force, &page, NULL);
+-    uvm_up_read_mmap_sem(&mm->mmap_sem);
++    uvm_down_read_mmap_sem(&mm->mmap_lock);
++    ret = NV_GET_USER_PAGES_REMOTE(mm, (unsigned long)addr, 1, 0, &page, NULL);
++    uvm_up_read_mmap_sem(&mm->mmap_lock);
+ 
+     if (ret < 0)
+         return errno_to_nv_status(ret);
+diff -ruN --no-dereference a/nvidia-uvm/uvm_linux.h b/nvidia-uvm/uvm_linux.h
+--- a/nvidia-uvm/uvm_linux.h	2026-06-15 01:29:48.853638339 +0800
++++ b/nvidia-uvm/uvm_linux.h	2026-06-15 01:29:48.854405721 +0800
+@@ -322,9 +322,9 @@
+ /* Return a nanosecond-precise value */
+ static inline NvU64 NV_GETTIME(void)
+ {
+-    struct timespec ts = {0};
++    struct timespec64 ts = {0};
+ 
+-    getrawmonotonic(&ts);
++    ktime_get_raw_ts64(&ts);
+ 
+     /* Wraps around every 583 years */
+     return (ts.tv_sec * 1000000000ULL + ts.tv_nsec);
