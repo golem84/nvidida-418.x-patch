@@ -127,6 +127,17 @@ def main():
     concat_tests(symbol_tests, 'conftest/symbols.h')
     concat_tests(type_tests, 'conftest/types.h')
 
+    # Generate patches.h
+    print("Generating patches.h...")
+    result = subprocess.run([
+        './conftest.sh', 'gcc', 'gcc', 'x86_64',
+        '/usr/src/linux-headers-7.0.0-22',
+        '/usr/src/linux-headers-7.0.0-22-generic',
+        'patch_check'
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    with open('conftest/patches.h', 'w') as f:
+        f.write(result.stdout)
+
     # Generate headers.h
     print("Generating headers.h...")
     result = subprocess.run([
